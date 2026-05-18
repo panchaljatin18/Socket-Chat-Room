@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Register Page</title>
+
+  <style>
+
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:Arial, Helvetica, sans-serif;
+    }
+
+    body{
+      height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      background:#0f172a;
+      overflow:hidden;
+    }
+
+    .background{
+      position:absolute;
+      width:100%;
+      height:100%;
+      overflow:hidden;
+    }
+
+    .circle{
+      position:absolute;
+      border-radius:50%;
+      background:rgba(37,99,235,0.2);
+      animation: float 10s infinite linear;
+    }
+
+    .circle:nth-child(1){
+      width:250px;
+      height:250px;
+      top:10%;
+      left:5%;
+    }
+
+    .circle:nth-child(2){
+      width:300px;
+      height:300px;
+      bottom:5%;
+      right:10%;
+    }
+
+    .circle:nth-child(3){
+      width:180px;
+      height:180px;
+      bottom:30%;
+      left:40%;
+    }
+
+    @keyframes float{
+      0%{
+        transform:translateY(0px);
+      }
+      50%{
+        transform:translateY(-30px);
+      }
+      100%{
+        transform:translateY(0px);
+      }
+    }
+
+    .register-container{
+      width:420px;
+      background:rgba(17,24,39,0.95);
+      padding:40px;
+      border-radius:25px;
+      box-shadow:0 0 30px rgba(0,0,0,0.5);
+      position:relative;
+      z-index:10;
+      backdrop-filter:blur(10px);
+    }
+
+    .register-container h1{
+      text-align:center;
+      color:white;
+      margin-bottom:10px;
+      font-size:32px;
+    }
+
+    .register-container p{
+      text-align:center;
+      color:#94a3b8;
+      margin-bottom:30px;
+      font-size:15px;
+    }
+
+    .input-box{
+      margin-bottom:20px;
+    }
+
+    .input-box label{
+      display:block;
+      color:#cbd5e1;
+      margin-bottom:8px;
+      font-size:14px;
+    }
+
+    .input-box input{
+      width:100%;
+      height:55px;
+      border:none;
+      outline:none;
+      border-radius:14px;
+      background:#1e293b;
+      color:white;
+      padding:0 20px;
+      font-size:15px;
+      transition:0.3s;
+    }
+
+    .input-box input:focus{
+      border:2px solid #2563eb;
+      background:#111827;
+    }
+
+    .register-btn{
+      width:100%;
+      height:55px;
+      border:none;
+      border-radius:14px;
+      background:#2563eb;
+      color:white;
+      font-size:17px;
+      cursor:pointer;
+      transition:0.3s;
+      margin-top:10px;
+    }
+
+    .register-btn:hover{
+      background:#1d4ed8;
+      transform:translateY(-2px);
+    }
+
+    .extra-links{
+      margin-top:25px;
+      text-align:center;
+      color:#94a3b8;
+      font-size:14px;
+    }
+
+    .extra-links a{
+      color:#3b82f6;
+      text-decoration:none;
+      font-weight:bold;
+    }
+
+    .logo{
+      width:70px;
+      height:70px;
+      border-radius:20px;
+      background:#2563eb;
+      margin:0 auto 20px;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      color:white;
+      font-size:28px;
+      font-weight:bold;
+      box-shadow:0 0 20px rgba(37,99,235,0.5);
+    }
+
+    @media(max-width:500px){
+
+      .register-container{
+        width:90%;
+        padding:30px 20px;
+      }
+
+    }
+
+    /* PASSWORD WRAPPER */
+    .password-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    .password-wrapper input {
+      margin-bottom: 0 !important;
+      padding-right: 50px !important;
+    }
+
+    /* CUSTOM TOAST NOTIFICATION */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: rgba(17, 24, 39, 0.95);
+      border-left: 5px solid #10b981;
+      color: white;
+      padding: 16px 24px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      font-size: 15px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      backdrop-filter: blur(10px);
+      transform: translateX(120%);
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .toast.show {
+      transform: translateX(0);
+    }
+
+    .toast-icon {
+      font-size: 20px;
+    }
+
+    .toast.error {
+      border-left-color: #ef4444;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <div class="background">
+
+    <div class="circle"></div>
+    <div class="circle"></div>
+    <div class="circle"></div>
+
+  </div>
+
+  <div class="register-container">
+
+    <div class="logo">
+      C
+    </div>
+
+    <h1>Create Account</h1>
+
+    <p>Register to start realtime chatting</p>
+
+    <form id="signupForm">
+
+      <div class="input-box">
+        <label>Full Name</label>
+        <input type="text" id="signupName" placeholder="Enter your name" required>
+      </div>
+
+      <div class="input-box">
+        <label>Email Address</label>
+        <input type="email" id="signupEmail" placeholder="Enter your email" required>
+      </div>
+
+      <div class="input-box">
+        <label>Password</label>
+        <div class="password-wrapper">
+          <input type="password" id="signupPassword" placeholder="Enter password" required>
+          <button type="button" onclick="togglePassword('signupPassword', 'eyeIcon')" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; outline: none; z-index: 5; height: 20px; width: 20px;">
+            <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path class="eye-open" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle class="eye-open" cx="12" cy="12" r="3"></circle>
+              <line class="eye-closed" x1="1" y1="1" x2="23" y2="23" style="display: none;" stroke="#cbd5e1" stroke-width="2"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="register-btn">
+        Register
+      </button>
+
+    </form>
+
+    <div class="extra-links">
+
+      Already have an account?
+      <a href="/login">Login</a>
+
+    </div>
+
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // Redirect if already logged in
+    if (sessionStorage.getItem("chatUsername")) {
+      window.location.href = "/";
+    }
+
+    // Custom Toast Notification Function
+    function showToast(message, type = 'success') {
+      const container = document.getElementById("toastContainer");
+      const toast = document.createElement("div");
+      toast.className = `toast ${type}`;
+      
+      const icon = type === 'success' ? '🎉' : '❌';
+      toast.innerHTML = `<span class="toast-icon">${icon}</span> <span>${message}</span>`;
+      
+      container.appendChild(toast);
+      
+      // Force reflow
+      toast.offsetHeight;
+      
+      // Slide in
+      toast.classList.add("show");
+      
+      // Auto-remove after 3 seconds
+      setTimeout(() => {
+        toast.classList.remove("show");
+        setTimeout(() => toast.remove(), 400);
+      }, 3000);
+    }
+
+    document.getElementById("signupForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      
+      const name = document.getElementById("signupName").value.trim();
+      const email = document.getElementById("signupEmail").value.trim();
+      const password = document.getElementById("signupPassword").value;
+
+      if (!name) {
+        showToast("Please enter your name.", "error");
+        return;
+      }
+
+      if (!password) {
+        showToast("Please enter a password.", "error");
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ username: name, email, password })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          showToast(data.error || "Registration failed.", "error");
+          return;
+        }
+
+        // Show attractive Success Toast
+        showToast(`Registration Successful! Welcome, ${name} ✨`, "success");
+
+        // Redirect to login page
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 1500);
+      } catch (err) {
+        console.error(err);
+        showToast("Network error. Please try again.", "error");
+      }
+    });
+
+    // Toggle Password Visibility
+    function togglePassword(inputId, iconId) {
+      const input = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      const closedLine = icon.querySelector(".eye-closed");
+      
+      if (input.type === "password") {
+        input.type = "text";
+        closedLine.style.display = "block";
+      } else {
+        input.type = "password";
+        closedLine.style.display = "none";
+      }
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — ChatApp</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #020617;
+      overflow: hidden;
+    }
+
+    .login-page {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+    }
+
+    .login-box {
+      width: 400px;
+      background: #111827;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .login-box h1 {
+      text-align: center;
+      color: white;
+      margin-bottom: 30px;
+      font-size: 28px;
+    }
+
+    .login-box input {
+      width: 100%;
+      height: 55px;
+      margin-bottom: 20px;
+      border: none;
+      outline: none;
+      border-radius: 12px;
+      background: #1f2937;
+      color: white;
+      padding: 0 20px;
+      font-size: 16px;
+      transition: 0.3s;
+    }
+
+    .login-box input:focus {
+      border: 2px solid #2563eb;
+      background: #111827;
+    }
+
+    .login-box button {
+      width: 100%;
+      height: 55px;
+      border: none;
+      border-radius: 12px;
+      background: #2563eb;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      transition: 0.3s;
+      margin-top: 5px;
+    }
+
+    .login-box button:hover {
+      background: #1d4ed8;
+      transform: translateY(-2px);
+    }
+
+    .error-msg {
+      color: #f87171;
+      font-size: 14px;
+      margin-top: -10px;
+      margin-bottom: 15px;
+      display: none;
+    }
+
+    .extra-links {
+      margin-top: 25px;
+      text-align: center;
+      color: #94a3b8;
+      font-size: 14px;
+    }
+
+    .extra-links a {
+      color: #3b82f6;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    /* PASSWORD WRAPPER */
+    .password-wrapper {
+      position: relative;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    .password-wrapper input {
+      margin-bottom: 0 !important;
+      padding-right: 50px !important;
+    }
+
+    /* CUSTOM TOAST NOTIFICATION */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: rgba(17, 24, 39, 0.95);
+      border-left: 5px solid #10b981;
+      color: white;
+      padding: 16px 24px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      font-size: 15px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      backdrop-filter: blur(10px);
+      transform: translateX(120%);
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .toast.show {
+      transform: translateX(0);
+    }
+
+    .toast-icon {
+      font-size: 20px;
+    }
+
+    .toast.error {
+      border-left-color: #ef4444;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="login-page">
+    <div class="login-box">
+      <h1>💬 ChatApp</h1>
+
+      <form id="loginForm">
+        <input type="text" id="loginUsername" placeholder="Username" required>
+
+        <div class="password-wrapper">
+          <input type="password" id="loginPassword" placeholder="Password" required>
+          <button type="button" onclick="togglePassword('loginPassword', 'eyeIcon')"
+            style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; outline: none; z-index: 5; height: 20px; width: 20px;">
+            <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke="#cbd5e1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path class="eye-open" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle class="eye-open" cx="12" cy="12" r="3"></circle>
+              <line class="eye-closed" x1="1" y1="1" x2="23" y2="23" style="display: none;" stroke="#cbd5e1"
+                stroke-width="2"></line>
+            </svg>
+          </button>
+        </div>
+
+        <button type="submit">Login</button>
+      </form>
+
+      <div class="extra-links">
+        No account? <a href="/signup">Register</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // If already logged in, go straight to chat
+    if (sessionStorage.getItem("chatUsername")) {
+      window.location.href = "/";
+    }
+
+    // Custom Toast Notification Function
+    function showToast(message, type = 'success') {
+      const container = document.getElementById("toastContainer");
+      const toast = document.createElement("div");
+      toast.className = `toast ${type}`;
+
+      const icon = type === 'success' ? '🎉' : '❌';
+      toast.innerHTML = `<span class="toast-icon">${icon}</span> <span>${message}</span>`;
+
+      container.appendChild(toast);
+
+      // Force reflow
+      toast.offsetHeight;
+
+      // Slide in
+      toast.classList.add("show");
+
+      // Auto-remove after 3 seconds
+      setTimeout(() => {
+        toast.classList.remove("show");
+        setTimeout(() => toast.remove(), 400);
+      }, 3000);
+    }
+
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById("loginUsername").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      const errorMsg = document.getElementById("errorMsg");
+
+      if (!name || !password) {
+        if (errorMsg) errorMsg.style.display = "block";
+        showToast("Please enter username and password.", "error");
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ username: name, password })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          if (errorMsg) errorMsg.style.display = "block";
+          showToast(data.error || "Invalid credentials.", "error");
+          return;
+        }
+
+        if (errorMsg) errorMsg.style.display = "none";
+
+        // Save username for the chat page
+        sessionStorage.setItem("chatUsername", data.username);
+
+        // Show attractive Success Toast
+        showToast(`Login Successful! Welcome back, ${data.username} ✨`, "success");
+
+        // Go to chat after a brief delay so they see the toast
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 1500);
+      } catch (err) {
+        console.error(err);
+        showToast("Network error. Please try again.", "error");
+      }
+    });
+
+    // Toggle Password Visibility
+    function togglePassword(inputId, iconId) {
+      const input = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      const closedLine = icon.querySelector(".eye-closed");
+
+      if (input.type === "password") {
+        input.type = "text";
+        closedLine.style.display = "block";
+      } else {
+        input.type = "password";
+        closedLine.style.display = "none";
+      }
+    }
+  </script>
+</body>
+
+</html>
