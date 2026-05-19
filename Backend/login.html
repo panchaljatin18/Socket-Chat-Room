@@ -254,10 +254,10 @@
         if (errorMsg) errorMsg.style.display = "none";
 
         // Save username for the chat page
-        sessionStorage.setItem("chatUsername", data.username);
+        sessionStorage.setItem("chatUsername", data.user.username);
 
         // Show attractive Success Toast
-        showToast(`Login Successful! Welcome back, ${data.username} ✨`, "success");
+        showToast(`Login Successful! Welcome back, ${data.user.username} ✨`, "success");
 
         // Go to chat after a brief delay so they see the toast
         setTimeout(() => {
