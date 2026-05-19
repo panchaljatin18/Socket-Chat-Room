@@ -25,6 +25,10 @@ const roomSchema = new mongoose.Schema(
       enum: ["active", "terminated"],
       default: "active",
     },
+    activatedAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
   {
     timestamps: true,

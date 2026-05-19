@@ -522,10 +522,13 @@
     });
 
     // JOIN ROOM
-    function joinRoom() {
-      const roomId = document.getElementById("roomId").value.trim();
+    function joinRoom(savedRoomId) {
+      const roomId = typeof savedRoomId === "string" ? savedRoomId : document.getElementById("roomId").value.trim();
       if (!roomId) { return; }
       currentRoom = roomId;
+
+      // Save room ID to session storage to persist on page refresh
+      sessionStorage.setItem("chatRoomId", roomId);
 
       // Emit object with roomId and username
       socket.emit("join_room", { roomId, username: myUsername });
@@ -539,21 +542,59 @@
       document.getElementById("roomPage").style.display = "none";
     }
 
+    let isAutojoin = false;
+
+    // Auto-rejoin room if page is refreshed
+    const savedRoom = sessionStorage.getItem("chatRoomId");
+    if (savedRoom) {
+      isAutojoin = true;
+      joinRoom(savedRoom);
+    }
+
     // ROOM PRIVILEGE STATUS (Host/Participant)
     socket.on("room_status", (data) => {
       const terminateBtn = document.getElementById("terminateBtn");
       if (data.isCreator) {
         terminateBtn.style.display = "block";
-        showToast("You created the room! You are the host. 👑", "success");
+        if (!isAutojoin) {
+          showToast("You created the room! You are the host. 👑", "success");
+        }
       } else {
         terminateBtn.style.display = "none";
-        showToast("Successfully joined the room! 👋", "success");
+        if (!isAutojoin) {
+          showToast("Successfully joined the room! 👋", "success");
+        }
       }
+      isAutojoin = false; // Reset after first auto-join
     });
 
     // USER JOINED NOTIFICATION
     socket.on("user_joined", (data) => {
       appendMessage(data.message, "system");
+    });
+
+    // USER LEFT NOTIFICATION
+    socket.on("user_left", (data) => {
+      appendMessage(data.message, "system");
+    });
+
+    // LOAD PREVIOUS MESSAGES (Chat History)
+    socket.on("previous_messages", (messages) => {
+      // Clear current chat display to avoid duplicates
+      document.getElementById("chatBody").innerHTML = "";
+
+      messages.forEach((msg) => {
+        if (msg.senderId === "system" || msg.senderName === "System") {
+          appendMessage(msg.message, "system");
+        } else {
+          const messageType = msg.senderName === myUsername ? "sender" : "receiver";
+          if (messageType === "sender") {
+            appendMessage(msg.message, "sender");
+          } else {
+            appendMessage((msg.senderName ? msg.senderName + ": " : "") + msg.message, "receiver");
+          }
+        }
+      });
     });
 
     // ROOM TERMINATED BY HOST CALLBACK — Logout session and redirect
