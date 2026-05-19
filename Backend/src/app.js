@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
-import userRoutes from "./routes/userRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,7 +16,7 @@ app.use(cors());
 app.use(express.json());
 
 // API Routes for Authentication
-app.use("/api", userRoutes);
+app.use("/api", authRoutes);
 
 // Serve static HTML files from Backend/ root
 app.use(express.static(ROOT_DIR));
