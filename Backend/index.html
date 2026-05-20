@@ -919,15 +919,15 @@
         } else {
           const messageType = msg.senderName === myUsername ? "sender" : "receiver";
           if (messageType === "sender") {
-            appendMessage(msg.message, "sender", msg.seen);
+            appendMessage(msg.message, "sender", msg.seen, msg.delivered);
           } else {
             appendMessage((msg.senderName ? msg.senderName + ": " : "") + msg.message, "receiver");
           }
         }
       });
 
-      // Auto-emit seen if the user has loaded room history (meaning they see the messages now)
-      if (currentRoom) {
+      // Auto-emit seen if the user has loaded room history (meaning they see the messages now) and window is focused
+      if (currentRoom && document.hasFocus()) {
         socket.emit("message_seen", { roomId: currentRoom, seenBy: myUsername });
       }
     });
@@ -1013,8 +1013,8 @@
         senderName: myUsername,
       });
 
-      // Show own message immediately as sender (with seen tick)
-      appendMessage(message, "sender");
+      // Show own message immediately as sender (with single tick)
+      appendMessage(message, "sender", false, false);
       messageInput.value = "";
     }
 
@@ -1024,9 +1024,35 @@
     });
 
     // ── SEEN STATUS ───────────────────────────────────────────────
-    // When chat body is scrolled to bottom (receiver reads), emit seen
+    // When chat body is scrolled to bottom (receiver reads), emit seen if document is focused
     const chatBodyEl = document.getElementById("chatBody");
     chatBodyEl.addEventListener("scroll", () => {
+      if (!currentRoom) return;
+      const atBottom = chatBodyEl.scrollHeight - chatBodyEl.scrollTop - chatBodyEl.clientHeight < 50;
+      if (atBottom && document.hasFocus()) {
+        socket.emit("message_seen", { roomId: currentRoom, seenBy: myUsername });
+      }
+    });
+
+    // Also emit seen when window gets focus, if we are at the bottom of the chat
+    window.addEventListener("focus", () => {
+      if (!currentRoom) return;
+      const atBottom = chatBodyEl.scrollHeight - chatBodyEl.scrollTop - chatBodyEl.clientHeight < 50;
+      if (atBottom) {
+        socket.emit("message_seen", { roomId: currentRoom, seenBy: myUsername });
+      }
+    });
+
+    // Emit seen on user interaction/click inside the message input or chat area
+    document.getElementById("messageInput").addEventListener("click", () => {
+      if (!currentRoom) return;
+      const atBottom = chatBodyEl.scrollHeight - chatBodyEl.scrollTop - chatBodyEl.clientHeight < 50;
+      if (atBottom) {
+        socket.emit("message_seen", { roomId: currentRoom, seenBy: myUsername });
+      }
+    });
+
+    chatBodyEl.addEventListener("click", () => {
       if (!currentRoom) return;
       const atBottom = chatBodyEl.scrollHeight - chatBodyEl.scrollTop - chatBodyEl.clientHeight < 50;
       if (atBottom) {
@@ -1036,33 +1062,49 @@
 
     // When sender receives seen confirmation → turn all ticks blue
     socket.on("messages_seen", ({ seenBy }) => {
+      if (seenBy === myUsername) return; // Ignore own read receipts from other tabs
       document.querySelectorAll(".seen-tick").forEach(tick => {
         tick.classList.add("seen");
         tick.title = `Seen by ${seenBy}`;
       });
     });
 
+    // When messages are delivered to other users in the room, upgrade all single ticks to double ticks
+    socket.on("messages_delivered", () => {
+      document.querySelectorAll(".seen-tick").forEach(tick => {
+        if (tick.innerText === "✓ Sent") {
+          tick.innerText = "✓✓ Delivered";
+        }
+      });
+    });
+
     // RECEIVE MESSAGE from others
     socket.on("receive_message", (data) => {
-      // Skip echo of own message (server broadcasts to all including sender)
-      if (data.senderId === socket.id) return;
+      // If this is the echo of our own message, update its delivery and seen status
+      if (data.senderId === socket.id) {
+        if (data.delivered) {
+          const ticks = document.querySelectorAll(".seen-tick");
+          if (ticks.length > 0) {
+            const lastTick = ticks[ticks.length - 1];
+            lastTick.innerText = "✓✓ Delivered";
+            if (data.seen) {
+              lastTick.classList.add("seen");
+            }
+          }
+        }
+        return;
+      }
       
       // If the message is sent by the same user on another tab/device, style it as sender (right side)
       if (data.senderName === myUsername) {
-        appendMessage(data.message, "sender");
+        appendMessage(data.message, "sender", data.seen, data.delivered);
       } else {
         appendMessage((data.senderName ? data.senderName + ": " : "") + data.message, "receiver");
-      }
-      
-      // Receiver auto-emits seen when at bottom
-      const atBottom = chatBodyEl.scrollHeight - chatBodyEl.scrollTop - chatBodyEl.clientHeight < 50;
-      if (atBottom && currentRoom) {
-        socket.emit("message_seen", { roomId: currentRoom, seenBy: myUsername });
       }
     });
 
     // ── APPEND MESSAGE ────────────────────────────────────────────
-    function appendMessage(text, type, seen = false) {
+    function appendMessage(text, type, seen = false, delivered = false) {
       const chatBody = document.getElementById("chatBody");
       const wrapper = document.createElement("div");
       wrapper.classList.add("msg-wrapper", type === "sender" ? "sender-wrap" : "receiver-wrap");
@@ -1079,8 +1121,12 @@
         if (seen) {
           tick.classList.add("seen");
           tick.title = "Seen";
+          tick.innerText = "✓✓ Delivered";
+        } else if (delivered) {
+          tick.innerText = "✓✓ Delivered";
+        } else {
+          tick.innerText = "✓ Sent";
         }
-        tick.innerText = "✓✓ Delivered";
         wrapper.appendChild(tick);
       }
 

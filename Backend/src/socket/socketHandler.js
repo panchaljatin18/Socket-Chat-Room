@@ -183,6 +183,13 @@ const socketHandler = (io) => {
         const roomDoc = await Room.findOne({ roomId });
         const activatedAt = roomDoc ? roomDoc.activatedAt : new Date(0);
 
+        // Mark all messages in the room sent by others as delivered
+        await Message.updateMany(
+          { roomId: roomId, senderId: { $ne: socket.id }, delivered: { $ne: true } },
+          { $set: { delivered: true } }
+        );
+        socket.to(roomId).emit("messages_delivered");
+
         const previousMessages = await Message.find({
           roomId,
           createdAt: { $gte: activatedAt },
@@ -209,10 +216,10 @@ const socketHandler = (io) => {
     socket.on("message_seen", async ({ roomId, seenBy }) => {
       try {
         await Message.updateMany(
-          { roomId: roomId, senderId: { $ne: socket.id }, seen: { $ne: true } },
-          { $set: { seen: true } }
+          { roomId: roomId, senderName: { $ne: seenBy } },
+          { $set: { seen: true, delivered: true } }
         );
-        console.log(`Updated messages in ${roomId} as seen by socket ${socket.id} (${seenBy})`);
+        console.log(`Updated messages in ${roomId} as seen and delivered by user ${seenBy}`);
       } catch (dbErr) {
         console.error("Database Update Message Seen Error:", dbErr);
       }
@@ -254,6 +261,21 @@ const socketHandler = (io) => {
 
     // SEND MESSAGE
     socket.on("send_message", async (data) => {
+      // Find if there are other users connected in this room
+      const room = activeRooms[data.roomId];
+      let hasOtherParticipants = false;
+      if (room && room.users) {
+        for (const u of Object.keys(room.users)) {
+          if (u !== data.senderName) {
+            const sids = room.users[u];
+            if (sids && sids.length > 0) {
+              hasOtherParticipants = true;
+              break;
+            }
+          }
+        }
+      }
+
       // SAVE MESSAGE IN DATABASE (with senderName)
       try {
         await Message.create({
@@ -261,6 +283,8 @@ const socketHandler = (io) => {
           senderId: socket.id,
           senderName: data.senderName || "Guest",
           message: data.message,
+          seen: false,
+          delivered: hasOtherParticipants
         });
         console.log("Saved Message in Database");
       } catch (dbErr) {
@@ -272,6 +296,8 @@ const socketHandler = (io) => {
         senderId: socket.id,
         senderName: data.senderName || "",
         message: data.message,
+        delivered: hasOtherParticipants,
+        seen: false
       });
     });
 
