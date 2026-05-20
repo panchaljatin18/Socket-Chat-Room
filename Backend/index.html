@@ -881,6 +881,23 @@
       isAutojoin = false; // Reset after first auto-join
     });
 
+    // JOIN ERROR CALLBACK (e.g. trying to join a different room in another tab)
+    socket.on("join_error", (data) => {
+      showToast(data.message, "error");
+      
+      // Reset room state
+      currentRoom = "";
+      sessionStorage.removeItem("chatRoomId");
+      
+      // Reset header details
+      document.getElementById("chatHeaderTitle").innerText = "Room Chat";
+      document.getElementById("chatHeaderSub").innerText = "Waiting to join room...";
+      document.getElementById("chatHeaderAvatar").innerText = "R";
+      
+      // Re-show Room Overlay
+      document.getElementById("roomPage").style.display = "flex";
+    });
+
     // USER JOINED NOTIFICATION
     socket.on("user_joined", (data) => {
       appendMessage(data.message, "system");
@@ -902,12 +919,17 @@
         } else {
           const messageType = msg.senderName === myUsername ? "sender" : "receiver";
           if (messageType === "sender") {
-            appendMessage(msg.message, "sender");
+            appendMessage(msg.message, "sender", msg.seen);
           } else {
             appendMessage((msg.senderName ? msg.senderName + ": " : "") + msg.message, "receiver");
           }
         }
       });
+
+      // Auto-emit seen if the user has loaded room history (meaning they see the messages now)
+      if (currentRoom) {
+        socket.emit("message_seen", { roomId: currentRoom, seenBy: myUsername });
+      }
     });
 
     // ROOM TERMINATED BY HOST CALLBACK — Logout session and redirect
@@ -948,6 +970,7 @@
     });
 
     socket.on("user_typing", ({ username }) => {
+      if (username === myUsername) return; // Suppress typing indicator for own user on other tabs/devices
       document.getElementById("typingText").innerText = `${username} is typing...`;
       document.getElementById("typingBar").style.display = "flex";
     });
@@ -1023,7 +1046,14 @@
     socket.on("receive_message", (data) => {
       // Skip echo of own message (server broadcasts to all including sender)
       if (data.senderId === socket.id) return;
-      appendMessage((data.senderName ? data.senderName + ": " : "") + data.message, "receiver");
+      
+      // If the message is sent by the same user on another tab/device, style it as sender (right side)
+      if (data.senderName === myUsername) {
+        appendMessage(data.message, "sender");
+      } else {
+        appendMessage((data.senderName ? data.senderName + ": " : "") + data.message, "receiver");
+      }
+      
       // Receiver auto-emits seen when at bottom
       const atBottom = chatBodyEl.scrollHeight - chatBodyEl.scrollTop - chatBodyEl.clientHeight < 50;
       if (atBottom && currentRoom) {
@@ -1032,7 +1062,7 @@
     });
 
     // ── APPEND MESSAGE ────────────────────────────────────────────
-    function appendMessage(text, type) {
+    function appendMessage(text, type, seen = false) {
       const chatBody = document.getElementById("chatBody");
       const wrapper = document.createElement("div");
       wrapper.classList.add("msg-wrapper", type === "sender" ? "sender-wrap" : "receiver-wrap");
@@ -1046,6 +1076,10 @@
       if (type === "sender") {
         const tick = document.createElement("span");
         tick.classList.add("seen-tick");
+        if (seen) {
+          tick.classList.add("seen");
+          tick.title = "Seen";
+        }
         tick.innerText = "✓✓ Delivered";
         wrapper.appendChild(tick);
       }

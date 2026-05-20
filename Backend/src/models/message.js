@@ -6,6 +6,7 @@ const messageSchema = new mongoose.Schema(
     senderId: String,
     senderName: String,
     message: String,
+    seen: { type: Boolean, default: false }
   },
   {
     timestamps: true,

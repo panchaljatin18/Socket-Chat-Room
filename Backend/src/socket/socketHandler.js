@@ -37,6 +37,26 @@ const socketHandler = (io) => {
 
       if (!roomId) return;
 
+      // Check if user is already active in any other room
+      let activeRoomId = null;
+      for (const rId of Object.keys(activeRooms)) {
+        if (activeRooms[rId].users && activeRooms[rId].users[username]) {
+          const sids = activeRooms[rId].users[username];
+          if (Array.isArray(sids) ? sids.length > 0 : sids) {
+            activeRoomId = rId;
+            break;
+          }
+        }
+      }
+
+      if (activeRoomId && activeRoomId !== roomId) {
+        console.log(`User ${username} blocked from joining room ${roomId} because they are already active in room ${activeRoomId}`);
+        socket.emit("join_error", {
+          message: `You are already logged in and active in room "${activeRoomId}". You cannot join a different room in another tab.`
+        });
+        return;
+      }
+
       socket.join(roomId);
       socket.username = username;
       socket.currentRoom = roomId;
@@ -54,12 +74,17 @@ const socketHandler = (io) => {
         console.log(`Suppressed disconnect/connect messages for refreshing user: ${username}`);
       }
 
-      // Case 2: The new socket joined before the old socket's disconnect event arrived
+      // Case 2: The new socket joined before the old socket's disconnect event arrived or user is already connected in another tab
       if (activeRooms[roomId] && activeRooms[roomId].users && activeRooms[roomId].users[username]) {
-        const oldSid = activeRooms[roomId].users[username];
-        if (oldSid !== socket.id) {
+        const sids = activeRooms[roomId].users[username];
+        if (Array.isArray(sids)) {
+          if (!sids.includes(socket.id) && sids.length > 0) {
+            isReconnecting = true;
+            console.log(`Suppressed join message: User ${username} was already connected via socket(s) ${sids.join(", ")}`);
+          }
+        } else if (sids !== socket.id) {
           isReconnecting = true;
-          console.log(`Suppressed join message: User ${username} was already connected via socket ${oldSid}`);
+          console.log(`Suppressed join message: User ${username} was already connected via socket ${sids}`);
         }
       }
 
@@ -68,7 +93,7 @@ const socketHandler = (io) => {
         activeRooms[roomId] = {
           creatorId: socket.id,
           creatorName: username,
-          users: { [username]: socket.id }
+          users: { [username]: [socket.id] }
         };
 
         // Create or update persistent Room entry in Database (never deleting history)
@@ -102,7 +127,16 @@ const socketHandler = (io) => {
         }
 
         // Store/Update this user's socket association
-        activeRooms[roomId].users[username] = socket.id;
+        if (!activeRooms[roomId].users[username]) {
+          activeRooms[roomId].users[username] = [socket.id];
+        } else if (Array.isArray(activeRooms[roomId].users[username])) {
+          if (!activeRooms[roomId].users[username].includes(socket.id)) {
+            activeRooms[roomId].users[username].push(socket.id);
+          }
+        } else {
+          // Upgrade single string to array if legacy string exists
+          activeRooms[roomId].users[username] = [activeRooms[roomId].users[username], socket.id];
+        }
 
         // Update persistent Room participants list in Database
         try {
@@ -172,7 +206,16 @@ const socketHandler = (io) => {
     });
 
     // MESSAGE SEEN — broadcast to everyone in room that messages have been seen
-    socket.on("message_seen", ({ roomId, seenBy }) => {
+    socket.on("message_seen", async ({ roomId, seenBy }) => {
+      try {
+        await Message.updateMany(
+          { roomId: roomId, senderId: { $ne: socket.id }, seen: { $ne: true } },
+          { $set: { seen: true } }
+        );
+        console.log(`Updated messages in ${roomId} as seen by socket ${socket.id} (${seenBy})`);
+      } catch (dbErr) {
+        console.error("Database Update Message Seen Error:", dbErr);
+      }
       socket.to(roomId).emit("messages_seen", { seenBy });
     });
 
@@ -242,18 +285,30 @@ const socketHandler = (io) => {
         if (room && room.users) {
           // Find the username associated with this disconnecting socket ID
           let leavingUsername = null;
-          for (const [uname, sid] of Object.entries(room.users)) {
-            if (sid === socket.id) {
-              leavingUsername = uname;
-              delete room.users[uname]; // Remove from active room users map
-              break;
+          for (const [uname, sids] of Object.entries(room.users)) {
+            if (Array.isArray(sids)) {
+              const index = sids.indexOf(socket.id);
+              if (index !== -1) {
+                sids.splice(index, 1); // Remove this socket ID
+                if (sids.length === 0) {
+                  leavingUsername = uname;
+                  delete room.users[uname]; // Remove from active room users map
+                }
+                break;
+              }
+            } else {
+              if (sids === socket.id) {
+                leavingUsername = uname;
+                delete room.users[uname];
+                break;
+              }
             }
           }
 
           // If this socket ID was not active for any username (meaning it was already replaced
-          // by a newer socket during a rapid connect-before-disconnect refresh), we can just ignore it!
+          // by a newer socket during a rapid connect-before-disconnect refresh, or the user is still active in another tab), we can just ignore it!
           if (!leavingUsername) {
-            console.log(`Socket ${socket.id} was already replaced by a newer connection. Suppressing disconnect timeout.`);
+            console.log(`Socket ${socket.id} was already replaced by a newer connection or user is still active on another tab. Suppressing disconnect timeout.`);
             return;
           }
 
@@ -268,8 +323,6 @@ const socketHandler = (io) => {
           if (pendingDisconnects[disconnectKey]) {
             clearTimeout(pendingDisconnects[disconnectKey]);
           }
-
-          const creatorSocketId = socket.id;
 
           pendingDisconnects[disconnectKey] = setTimeout(async () => {
             // 1. Broadcast user_left notification if the user did not reconnect in time
@@ -295,21 +348,24 @@ const socketHandler = (io) => {
 
             // 2. If the host left, terminate the room
             const currentRoomState = activeRooms[roomId];
-            if (currentRoomState && currentRoomState.creatorId === creatorSocketId) {
-              io.to(roomId).emit("room_terminated", {
-                message: "The chat session was terminated because the host left."
-              });
-              delete activeRooms[roomId];
+            if (currentRoomState && currentRoomState.creatorName === username) {
+              // Double check if the creator has no remaining active sockets
+              if (!currentRoomState.users[username] || currentRoomState.users[username].length === 0) {
+                io.to(roomId).emit("room_terminated", {
+                  message: "The chat session was terminated because the host left."
+                });
+                delete activeRooms[roomId];
 
-              // Update status to terminated in persistent Database
-              try {
-                await Room.findOneAndUpdate(
-                  { roomId: roomId },
-                  { status: "terminated" }
-                );
-                console.log(`Marked Room ${roomId} as terminated in Database (host left)`);
-              } catch (dbErr) {
-                console.error("Database Room Terminate Error on Disconnect:", dbErr);
+                // Update status to terminated in persistent Database
+                try {
+                  await Room.findOneAndUpdate(
+                    { roomId: roomId },
+                    { status: "terminated" }
+                  );
+                  console.log(`Marked Room ${roomId} as terminated in Database (host left)`);
+                } catch (dbErr) {
+                  console.error("Database Room Terminate Error on Disconnect:", dbErr);
+                }
               }
             }
 
