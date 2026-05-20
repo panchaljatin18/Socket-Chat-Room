@@ -5,6 +5,14 @@ import Room from "../models/Room.js";
 const activeRooms = {};
 const pendingDisconnects = {};
 
+// Helper: broadcast updated online users list to a room
+function emitOnlineUsers(io, roomId) {
+  const room = activeRooms[roomId];
+  if (!room) return;
+  const users = Object.keys(room.users);
+  io.to(roomId).emit("online_users", users);
+}
+
 const socketHandler = (io) => {
 
   io.on("connection", (socket) => {
@@ -31,6 +39,7 @@ const socketHandler = (io) => {
 
       socket.join(roomId);
       socket.username = username;
+      socket.currentRoom = roomId;
       console.log(`${username} joined ${roomId}`);
 
       // Check if this is a quick reconnect/refresh to suppress join/leave notifications
@@ -124,26 +133,47 @@ const socketHandler = (io) => {
           console.error("Database Save User Joined System Message Error:", dbErr);
         }
 
-        io.to(roomId).emit("user_joined", {
+        // broadcast to OTHERS only — joining user should NOT see their own join message
+        socket.broadcast.to(roomId).emit("user_joined", {
           username: username,
           message: joinMsg
         });
       }
 
+      // Broadcast updated online users list to all in room
+      emitOnlineUsers(io, roomId);
+
       // Fetch previous messages (only from the current active session) and send to the user who joined
+      // Exclude system messages (join/leave notifications) — new user should only see actual chat messages
       try {
         const roomDoc = await Room.findOne({ roomId });
         const activatedAt = roomDoc ? roomDoc.activatedAt : new Date(0);
 
         const previousMessages = await Message.find({
           roomId,
-          createdAt: { $gte: activatedAt }
+          createdAt: { $gte: activatedAt },
+          senderId: { $ne: "system" }  // ← filter out join/leave system messages
         }).sort({ createdAt: 1 });
 
         socket.emit("previous_messages", previousMessages);
       } catch (dbErr) {
         console.error("Database Message Fetch Error on Join:", dbErr);
       }
+    });
+
+    // TYPING INDICATOR — broadcast to others in the room
+    socket.on("typing", ({ roomId, username }) => {
+      socket.to(roomId).emit("user_typing", { username });
+    });
+
+    // STOP TYPING — broadcast to others in the room
+    socket.on("stop_typing", ({ roomId }) => {
+      socket.to(roomId).emit("user_stop_typing");
+    });
+
+    // MESSAGE SEEN — broadcast to everyone in room that messages have been seen
+    socket.on("message_seen", ({ roomId, seenBy }) => {
+      socket.to(roomId).emit("messages_seen", { seenBy });
     });
 
     // TERMINATE ROOM (Only creator can trigger)
@@ -228,6 +258,9 @@ const socketHandler = (io) => {
           }
 
           const username = leavingUsername;
+
+          // Immediately broadcast updated online users (user removed already above)
+          emitOnlineUsers(io, roomId);
 
           // Schedule a delayed disconnect message and potential termination
           const disconnectKey = `${roomId}_${username}`;

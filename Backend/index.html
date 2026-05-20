@@ -18,12 +18,14 @@
       background: #0f172a;
       color: white;
       height: 100vh;
+      height: 100dvh;
       overflow: hidden;
     }
 
     .container {
       display: flex;
       height: 100vh;
+      height: 100dvh;
     }
 
     /* SIDEBAR */
@@ -126,11 +128,14 @@
 
     .chat-body {
       flex: 1;
+      min-height: 0;
       padding: 25px;
       overflow-y: auto;
+      overflow-x: hidden;
       display: flex;
       flex-direction: column;
       gap: 15px;
+      -webkit-overflow-scrolling: touch;
     }
 
     .message {
@@ -181,6 +186,7 @@
 
     .chat-input input {
       flex: 1;
+      min-width: 0;
       height: 50px;
       border: none;
       outline: none;
@@ -355,18 +361,212 @@
       margin-bottom: 5px;
     }
 
-    @media (max-width: 900px) {
+    /* HAMBURGER BUTTON */
+    .hamburger-btn {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      flex-direction: column;
+      gap: 5px;
+      padding: 6px;
+      margin-right: 4px;
+      flex-shrink: 0;
+    }
+    .hamburger-btn span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: #94a3b8;
+      border-radius: 2px;
+      transition: 0.3s;
+    }
+
+    /* SIDEBAR BACKDROP */
+    .sidebar-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 49;
+      backdrop-filter: blur(2px);
+    }
+    .sidebar-backdrop.active { display: block; }
+
+    /* ═══════════════════════════════════════
+       LARGE DESKTOP (1280px+) — Default
+       ═══════════════════════════════════════ */
+    @media (min-width: 1280px) {
+      .sidebar { width: 340px; }
+      .chat-body { padding: 30px; }
+      .message { max-width: 420px; font-size: 15px; }
+      .chat-input { height: 90px; padding: 0 24px; }
+      .chat-input input { height: 52px; font-size: 16px; }
+      .chat-input button { width: 130px; height: 52px; font-size: 16px; }
+    }
+
+    /* ═══════════════════════════════════════
+       SMALL DESKTOP / LAPTOP (1024px – 1279px)
+       ═══════════════════════════════════════ */
+    @media (min-width: 1024px) and (max-width: 1279px) {
+      .sidebar { width: 280px; }
+      .chat-body { padding: 20px; }
+      .message { max-width: 380px; font-size: 15px; }
+      .chat-input { height: 82px; padding: 0 20px; }
+      .chat-input input { height: 48px; }
+      .chat-input button { width: 110px; height: 48px; }
+    }
+
+    /* ═══════════════════════════════════════
+       TABLET LANDSCAPE / SMALL LAPTOP (768px – 1023px)
+       ═══════════════════════════════════════ */
+    @media (min-width: 768px) and (max-width: 1023px) {
+      .sidebar { width: 240px; }
+      .sidebar-header h2 { font-size: 20px; }
+      .chat-header { height: 70px; padding: 0 18px; }
+      .chat-header .avatar { width: 40px; height: 40px; }
+      .chat-body { padding: 18px; gap: 12px; }
+      .message { max-width: 320px; font-size: 14px; }
+      .chat-input { height: 76px; padding: 0 16px; gap: 12px; }
+      .chat-input input { height: 46px; font-size: 15px; }
+      .chat-input button { width: 100px; height: 46px; font-size: 15px; }
+      .room-box { width: 360px; }
+      .online-users-panel { margin: 0 14px 14px 14px; }
+    }
+
+    /* ═══════════════════════════════════════
+       TABLET PORTRAIT / LARGE PHONE (480px – 767px)
+       ═══════════════════════════════════════ */
+    @media (max-width: 767px) {
+      body { overflow: hidden; }
+      .container { flex-direction: column; }
+
       .sidebar {
-        width: 100px;
+        position: fixed;
+        top: 0; left: 0;
+        height: 100vh;
+        width: 290px;
+        z-index: 50;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+        overflow-y: auto;
       }
+      .sidebar.open { transform: translateX(0); }
 
-      .chat-info {
-        display: none;
+      .chat-area { width: 100vw; height: 100vh; }
+
+      .chat-header { height: 62px; padding: 0 14px; gap: 10px; }
+      .chat-header .avatar { width: 38px; height: 38px; font-size: 14px; }
+      .chat-header h3 { font-size: 15px; }
+      .chat-header p { font-size: 12px; }
+
+      .hamburger-btn { display: flex; }
+      #terminateBtn { padding: 6px 10px; font-size: 12px; }
+
+      .chat-body { padding: 14px; gap: 10px; }
+      .message { max-width: 78vw; font-size: 14px; padding: 10px 14px; }
+
+      .chat-input { height: 68px; padding: 0 12px; gap: 10px; }
+      .chat-input input { height: 44px; font-size: 15px; padding: 0 14px; }
+      .chat-input button { width: 80px; height: 44px; font-size: 14px; }
+
+      .room-box { width: calc(100vw - 32px); padding: 26px 18px; border-radius: 16px; }
+      .room-box h3 { font-size: 20px; }
+      .room-box p { font-size: 13px; }
+      .room-box input { height: 46px; font-size: 14px; }
+      .room-box button { height: 46px; font-size: 15px; }
+
+      .online-users-panel { margin: 0 14px 14px 14px; }
+      .typing-bar { padding: 5px 14px; font-size: 12px; }
+
+      .toast-container { top: 10px; right: 10px; left: 10px; }
+      .toast { font-size: 13px; padding: 12px 16px; }
+    }
+
+    /* ═══════════════════════════════════════
+       SMALL PHONE (max-width: 420px)
+       ═══════════════════════════════════════ */
+    @media (max-width: 420px) {
+      .sidebar { width: 270px; }
+      .sidebar-header { padding: 16px; }
+      .sidebar-header h2 { font-size: 18px; }
+
+      .chat-header { height: 56px; padding: 0 10px; gap: 8px; }
+      .chat-header .avatar { width: 34px; height: 34px; font-size: 13px; }
+      .chat-header h3 { font-size: 13px; }
+      .chat-header p { font-size: 11px; display: none; }
+
+      #terminateBtn { padding: 5px 8px; font-size: 11px; }
+
+      .chat-body { padding: 10px; gap: 8px; }
+      .message { max-width: 82vw; font-size: 13px; padding: 9px 12px; }
+      .seen-tick { font-size: 10px; }
+
+      .chat-input { height: 62px; padding: 0 10px; gap: 8px; }
+      .chat-input input { height: 42px; font-size: 14px; padding: 0 12px; }
+      .chat-input button { width: 68px; height: 42px; font-size: 13px; }
+
+      .room-box { padding: 22px 14px; }
+      .room-box h3 { font-size: 18px; margin-bottom: 6px; }
+      .room-box p { font-size: 12px; margin-bottom: 18px; }
+      .room-box input { height: 44px; margin-bottom: 14px; font-size: 14px; }
+      .room-box button { height: 44px; font-size: 14px; }
+
+      .toast { font-size: 12px; padding: 10px 14px; gap: 8px; }
+      .typing-bar { font-size: 11px; }
+
+      .online-user-item { font-size: 13px; }
+      .online-avatar-sm { width: 24px; height: 24px; font-size: 11px; }
+    }
+
+    /* ═══════════════════════════════════════
+       VERY SMALL PHONE (max-width: 320px)
+       ═══════════════════════════════════════ */
+    @media (max-width: 320px) {
+      .sidebar { width: 250px; }
+      .chat-input button { width: 58px; font-size: 12px; }
+      .message { font-size: 12px; padding: 8px 10px; }
+      .chat-header h3 { font-size: 12px; }
+    }
+
+    /* ═══════════════════════════════════════
+       iQOO Z6 Lite 5G & similar (max 412px tall 20:9)
+       dvh fix + safe-area-insets for notch/gesture bar
+       ═══════════════════════════════════════ */
+    @media (max-width: 412px) {
+      body { height: 100dvh; }
+      .container { height: 100dvh; }
+      .chat-area { height: 100dvh; width: 100vw; }
+      .sidebar { height: 100dvh; }
+
+      .chat-input {
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
+        height: auto;
+        min-height: 62px;
+        padding-top: 10px;
+        padding-left: 12px;
+        padding-right: 12px;
+        gap: 8px;
       }
-
-      .room-box,
-      .admin-dashboard {
-        display: none;
+      .chat-header {
+        padding-top: max(0px, env(safe-area-inset-top));
+      }
+      .chat-input input {
+        height: 42px;
+        font-size: 15px;
+        padding: 0 12px;
+      }
+      .chat-input button {
+        width: 70px;
+        height: 42px;
+        font-size: 14px;
+        flex-shrink: 0;
+      }
+      .message { max-width: 84vw; font-size: 13px; }
+      .room-box {
+        width: calc(100vw - 24px);
+        padding: 24px 16px;
+        margin: 0 12px;
       }
     }
 
@@ -410,6 +610,99 @@
     .toast.error {
       border-left-color: #ef4444;
     }
+
+    /* ONLINE USERS PANEL */
+    .online-users-panel {
+      margin: 0 20px 20px 20px;
+      background: rgba(16, 185, 129, 0.05);
+      border: 1px solid rgba(16, 185, 129, 0.15);
+      border-radius: 15px;
+      padding: 15px;
+    }
+    .online-users-panel h5 {
+      font-size: 12px;
+      font-weight: 700;
+      color: #10b981;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+    .online-user-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 0;
+      font-size: 14px;
+      color: #e2e8f0;
+    }
+    .online-dot {
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 6px #10b981;
+      flex-shrink: 0;
+    }
+    .online-avatar-sm {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #2563eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    /* TYPING INDICATOR */
+    .typing-bar {
+      padding: 6px 25px;
+      min-height: 28px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #94a3b8;
+      font-style: italic;
+      background: #0f172a;
+      border-bottom: 1px solid #1f2937;
+    }
+    .typing-dots {
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
+    }
+    .typing-dots span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #3b82f6;
+      animation: typingBounce 1.2s infinite ease-in-out;
+    }
+    .typing-dots span:nth-child(1) { animation-delay: 0s; }
+    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typingBounce {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+      30% { transform: translateY(-6px); opacity: 1; }
+    }
+
+    /* SEEN TICKS */
+    .msg-wrapper {
+      display: flex;
+      flex-direction: column;
+    }
+    .msg-wrapper.sender-wrap { align-self: flex-end; align-items: flex-end; }
+    .msg-wrapper.receiver-wrap { align-self: flex-start; align-items: flex-start; }
+    .seen-tick {
+      font-size: 11px;
+      color: #64748b;
+      margin-top: 3px;
+      transition: color 0.3s;
+    }
+    .seen-tick.seen { color: #3b82f6; }
   </style>
 </head>
 
@@ -427,9 +720,9 @@
         <p style="color: #94a3b8; font-size: 14px; margin-top: 5px;">Active Session</p>
       </div>
 
-      <div class="chat-list" style="padding: 20px;">
+      <div class="chat-list" style="padding: 20px 20px 10px 20px;">
         <div
-          style="background: rgba(37, 99, 235, 0.08); border: 1px solid rgba(37, 99, 235, 0.15); border-radius: 15px; padding: 20px; text-align: center;">
+          style="background: rgba(37, 99, 235, 0.08); border: 1px solid rgba(37, 99, 235, 0.15); border-radius: 15px; padding: 20px; text-align: center; margin-bottom: 15px;">
           <div class="avatar" id="myAvatar"
             style="margin: 0 auto 15px auto; width: 60px; height: 60px; font-size: 24px; background: #2563eb; display: flex; align-items: center; justify-content: center; font-weight: bold; border-radius: 50%;">
             U</div>
@@ -440,6 +733,12 @@
             Online
           </span>
         </div>
+      </div>
+
+      <!-- ONLINE USERS PANEL -->
+      <div class="online-users-panel">
+        <h5>🟢 Online Now</h5>
+        <div id="onlineUsersList"><p style="color:#475569;font-size:13px;">Joining room...</p></div>
       </div>
 
       <!-- LOGOUT BUTTON -->
@@ -455,6 +754,11 @@
 
     <div class="chat-area">
       <div class="chat-header">
+        <!-- HAMBURGER (mobile only) -->
+        <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Open menu">
+          <span></span><span></span><span></span>
+        </button>
+
         <div class="avatar" id="chatHeaderAvatar"
           style="background: #2563eb; display: flex; align-items: center; justify-content: center; font-weight: bold; border-radius: 50%;">
           R</div>
@@ -472,6 +776,12 @@
         </button>
       </div>
 
+      <!-- TYPING INDICATOR BAR -->
+      <div class="typing-bar" id="typingBar" style="display:none;">
+        <div class="typing-dots"><span></span><span></span><span></span></div>
+        <span id="typingText">someone is typing...</span>
+      </div>
+
       <div class="chat-body" id="chatBody">
       </div>
 
@@ -483,6 +793,9 @@
       </div>
     </div>
   </div>
+
+  <!-- SIDEBAR BACKDROP (mobile) -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
 
   <!-- ROOM JOIN OVERLAY -->
   <div class="room-page" id="roomPage">
@@ -622,12 +935,54 @@
       window.location.href = "/login";
     }
 
-    // SEND MESSAGE
+    // ── TYPING INDICATOR ──────────────────────────────────────────
+    let typingTimer = null;
+
+    document.getElementById("messageInput").addEventListener("input", () => {
+      if (!currentRoom) return;
+      socket.emit("typing", { roomId: currentRoom, username: myUsername });
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(() => {
+        socket.emit("stop_typing", { roomId: currentRoom });
+      }, 1500);
+    });
+
+    socket.on("user_typing", ({ username }) => {
+      document.getElementById("typingText").innerText = `${username} is typing...`;
+      document.getElementById("typingBar").style.display = "flex";
+    });
+
+    socket.on("user_stop_typing", () => {
+      document.getElementById("typingBar").style.display = "none";
+    });
+
+    // ── ONLINE USERS ──────────────────────────────────────────────
+    socket.on("online_users", (users) => {
+      const list = document.getElementById("onlineUsersList");
+      if (!list) return;
+      if (users.length === 0) {
+        list.innerHTML = `<p style="color:#475569;font-size:13px;">No users online</p>`;
+        return;
+      }
+      list.innerHTML = users.map(u => `
+        <div class="online-user-item">
+          <div class="online-avatar-sm">${u.charAt(0).toUpperCase()}</div>
+          <span>${u}</span>
+          <div class="online-dot" style="margin-left:auto;"></div>
+        </div>
+      `).join("");
+    });
+
+    // ── SEND MESSAGE ──────────────────────────────────────────────
     function sendMessage() {
       const messageInput = document.getElementById("messageInput");
       const message = messageInput.value.trim();
       if (!message) return;
       if (!currentRoom) { showToast("Please join a room first!", "error"); return; }
+
+      // Stop typing indicator
+      clearTimeout(typingTimer);
+      socket.emit("stop_typing", { roomId: currentRoom });
 
       socket.emit("send_message", {
         roomId: currentRoom,
@@ -635,7 +990,7 @@
         senderName: myUsername,
       });
 
-      // Show own message immediately as sender
+      // Show own message immediately as sender (with seen tick)
       appendMessage(message, "sender");
       messageInput.value = "";
     }
@@ -645,19 +1000,57 @@
       if (e.key === "Enter") sendMessage();
     });
 
+    // ── SEEN STATUS ───────────────────────────────────────────────
+    // When chat body is scrolled to bottom (receiver reads), emit seen
+    const chatBodyEl = document.getElementById("chatBody");
+    chatBodyEl.addEventListener("scroll", () => {
+      if (!currentRoom) return;
+      const atBottom = chatBodyEl.scrollHeight - chatBodyEl.scrollTop - chatBodyEl.clientHeight < 50;
+      if (atBottom) {
+        socket.emit("message_seen", { roomId: currentRoom, seenBy: myUsername });
+      }
+    });
+
+    // When sender receives seen confirmation → turn all ticks blue
+    socket.on("messages_seen", ({ seenBy }) => {
+      document.querySelectorAll(".seen-tick").forEach(tick => {
+        tick.classList.add("seen");
+        tick.title = `Seen by ${seenBy}`;
+      });
+    });
+
     // RECEIVE MESSAGE from others
     socket.on("receive_message", (data) => {
       // Skip echo of own message (server broadcasts to all including sender)
       if (data.senderId === socket.id) return;
       appendMessage((data.senderName ? data.senderName + ": " : "") + data.message, "receiver");
+      // Receiver auto-emits seen when at bottom
+      const atBottom = chatBodyEl.scrollHeight - chatBodyEl.scrollTop - chatBodyEl.clientHeight < 50;
+      if (atBottom && currentRoom) {
+        socket.emit("message_seen", { roomId: currentRoom, seenBy: myUsername });
+      }
     });
 
+    // ── APPEND MESSAGE ────────────────────────────────────────────
     function appendMessage(text, type) {
       const chatBody = document.getElementById("chatBody");
+      const wrapper = document.createElement("div");
+      wrapper.classList.add("msg-wrapper", type === "sender" ? "sender-wrap" : "receiver-wrap");
+
       const div = document.createElement("div");
       div.classList.add("message", type);
       div.innerText = text;
-      chatBody.appendChild(div);
+      wrapper.appendChild(div);
+
+      // Add seen tick only for own sent messages
+      if (type === "sender") {
+        const tick = document.createElement("span");
+        tick.classList.add("seen-tick");
+        tick.innerText = "✓✓ Delivered";
+        wrapper.appendChild(tick);
+      }
+
+      chatBody.appendChild(wrapper);
       chatBody.scrollTop = chatBody.scrollHeight;
     }
 
@@ -690,4 +1083,13 @@
   </script>
 </body>
 
+  <script>
+    // MOBILE SIDEBAR TOGGLE
+    function toggleSidebar() {
+      const sidebar = document.querySelector('.sidebar');
+      const backdrop = document.getElementById('sidebarBackdrop');
+      sidebar.classList.toggle('open');
+      backdrop.classList.toggle('active');
+    }
+  </script>
 </html>
