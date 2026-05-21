@@ -1,2 +1,8 @@
 node_modules
 .env
+
+# Uploaded files - should NOT be tracked by Git
+Backend/uploads/*
+
+# Keep the uploads folder itself (via .gitkeep)
+!Backend/uploads/.gitkeep
