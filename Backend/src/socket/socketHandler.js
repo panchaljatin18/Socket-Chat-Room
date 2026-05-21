@@ -177,12 +177,9 @@ const socketHandler = (io) => {
       // Broadcast updated online users list to all in room
       emitOnlineUsers(io, roomId);
 
-      // Fetch previous messages (only from the current active session) and send to the user who joined
-      // Exclude system messages (join/leave notifications) — new user should only see actual chat messages
+      // Fetch ALL previous messages for this room and send to the user who joined
+      // Exclude system messages (join/leave notifications) — users should only see actual chat messages
       try {
-        const roomDoc = await Room.findOne({ roomId });
-        const activatedAt = roomDoc ? roomDoc.activatedAt : new Date(0);
-
         // Mark all messages in the room sent by others as delivered
         await Message.updateMany(
           { roomId: roomId, senderId: { $ne: socket.id }, delivered: { $ne: true } },
@@ -190,12 +187,13 @@ const socketHandler = (io) => {
         );
         socket.to(roomId).emit("messages_delivered");
 
+        // Fetch ALL non-system messages — includes text, images, videos, documents, locations
         const previousMessages = await Message.find({
           roomId,
-          createdAt: { $gte: activatedAt },
-          senderId: { $ne: "system" }  // ← filter out join/leave system messages
+          senderId: { $ne: "system" }  // ← filter out join/leave system messages only
         }).sort({ createdAt: 1 });
 
+        console.log(`Sending ${previousMessages.length} previous messages to ${username} in room ${roomId}`);
         socket.emit("previous_messages", previousMessages);
       } catch (dbErr) {
         console.error("Database Message Fetch Error on Join:", dbErr);
