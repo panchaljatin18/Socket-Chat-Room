@@ -283,6 +283,11 @@ const socketHandler = (io) => {
           senderId: socket.id,
           senderName: data.senderName || "Guest",
           message: data.message,
+          messageType: data.messageType || "text",
+          fileUrl: data.fileUrl,
+          fileName: data.fileName,
+          fileSize: data.fileSize,
+          location: data.location,
           seen: false,
           delivered: hasOtherParticipants
         });
@@ -296,6 +301,11 @@ const socketHandler = (io) => {
         senderId: socket.id,
         senderName: data.senderName || "",
         message: data.message,
+        messageType: data.messageType || "text",
+        fileUrl: data.fileUrl,
+        fileName: data.fileName,
+        fileSize: data.fileSize,
+        location: data.location,
         delivered: hasOtherParticipants,
         seen: false
       });

@@ -703,6 +703,65 @@
       transition: color 0.3s;
     }
     .seen-tick.seen { color: #3b82f6; }
+
+    /* Attachment & Media Styles */
+    .message img {
+      max-width: 100%;
+      max-height: 250px;
+      border-radius: 10px;
+      display: block;
+      margin-top: 5px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .message img:hover {
+      transform: scale(1.02);
+    }
+    .message video {
+      max-width: 100%;
+      max-height: 250px;
+      border-radius: 10px;
+      display: block;
+      margin-top: 5px;
+    }
+    .doc-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 5px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      max-width: 280px;
+    }
+    .receiver .doc-card {
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid #1f2937;
+    }
+    .doc-card:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+    .receiver .doc-card:hover {
+      background: rgba(15, 23, 42, 0.8);
+    }
+    .location-card {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 12px 14px;
+      border-radius: 10px;
+      margin-top: 5px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      min-width: 200px;
+    }
+    .receiver .location-card {
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid #1f2937;
+    }
   </style>
 </head>
 
@@ -787,7 +846,39 @@
 
       <!-- INPUT -->
 
-      <div class="chat-input">
+      <!-- Pending Attachment Preview Bar -->
+      <div id="pendingPreviewBar" style="display:none; align-items:center; gap:10px; padding: 8px 16px; background:#111827; border-top:1px solid #1f2937; min-height:48px;">
+        <div id="pendingPreviewContent" style="display:flex; align-items:center; gap:10px; flex:1; overflow:hidden;"></div>
+        <button onclick="cancelPendingAttachment()" style="background:#ef4444; border:none; border-radius:8px; color:white; width:28px; height:28px; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">✕</button>
+      </div>
+
+      <div class="chat-input" style="position: relative;">
+        <!-- Hidden File Inputs -->
+        <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="handleFileSelected(this, 'image')" />
+        <input type="file" id="videoInput" accept="video/*" style="display: none;" onchange="handleFileSelected(this, 'video')" />
+        <input type="file" id="documentInput" accept="*" style="display: none;" onchange="handleFileSelected(this, 'document')" />
+
+        <!-- Attachment Button -->
+        <button id="attachBtn" onclick="toggleAttachmentMenu()" style="width: 50px; height: 50px; border-radius: 12px; background: #1f2937; color: #94a3b8; font-size: 20px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; flex-shrink: 0;">
+          📎
+        </button>
+
+        <!-- Attachment Dropdown Menu -->
+        <div id="attachmentMenu" style="display: none; position: absolute; bottom: 85px; left: 20px; background: #111827; border: 1px solid #1f2937; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); z-index: 100; width: 180px; flex-direction: column; overflow: hidden; padding: 6px;">
+          <button onclick="triggerFileInput('image')" style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: transparent; border: none; color: white; width: 100%; text-align: left; cursor: pointer; font-size: 14px; border-radius: 8px; transition: 0.2s;" onmouseover="this.style.background='#1f2937'" onmouseout="this.style.background='transparent'">
+            🖼️ Photo
+          </button>
+          <button onclick="triggerFileInput('video')" style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: transparent; border: none; color: white; width: 100%; text-align: left; cursor: pointer; font-size: 14px; border-radius: 8px; transition: 0.2s;" onmouseover="this.style.background='#1f2937'" onmouseout="this.style.background='transparent'">
+            🎥 Video
+          </button>
+          <button onclick="triggerFileInput('document')" style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: transparent; border: none; color: white; width: 100%; text-align: left; cursor: pointer; font-size: 14px; border-radius: 8px; transition: 0.2s;" onmouseover="this.style.background='#1f2937'" onmouseout="this.style.background='transparent'">
+            📄 Document
+          </button>
+          <button onclick="queueLocation()" style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: transparent; border: none; color: white; width: 100%; text-align: left; cursor: pointer; font-size: 14px; border-radius: 8px; transition: 0.2s;" onmouseover="this.style.background='#1f2937'" onmouseout="this.style.background='transparent'">
+            📍 Share Location
+          </button>
+        </div>
+
         <input type="text" id="messageInput" placeholder="Type message..." />
         <button onclick="sendMessage()">Send</button>
       </div>
@@ -917,12 +1008,8 @@
         if (msg.senderId === "system" || msg.senderName === "System") {
           appendMessage(msg.message, "system");
         } else {
-          const messageType = msg.senderName === myUsername ? "sender" : "receiver";
-          if (messageType === "sender") {
-            appendMessage(msg.message, "sender", msg.seen, msg.delivered);
-          } else {
-            appendMessage((msg.senderName ? msg.senderName + ": " : "") + msg.message, "receiver");
-          }
+          const bubbleType = msg.senderName === myUsername ? "sender" : "receiver";
+          appendMessage(msg, bubbleType, msg.seen, msg.delivered);
         }
       });
 
@@ -996,25 +1083,108 @@
       `).join("");
     });
 
+    // ── PENDING ATTACHMENT STATE ───────────────────────────────────
+    // Stores queued attachment: { type, file, fileUrl, fileName, fileSize, location }
+    let pendingAttachment = null;
+
+    function showPendingPreview(label, icon) {
+      const bar = document.getElementById("pendingPreviewBar");
+      const content = document.getElementById("pendingPreviewContent");
+      content.innerHTML = `
+        <span style="font-size:22px;">${icon}</span>
+        <span style="font-size:13px; color:#e2e8f0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; flex:1;">${label}</span>
+        <span style="font-size:11px; color:#64748b; flex-shrink:0;">Press Send to share</span>
+      `;
+      bar.style.display = "flex";
+    }
+
+    function cancelPendingAttachment() {
+      pendingAttachment = null;
+      document.getElementById("pendingPreviewBar").style.display = "none";
+      document.getElementById("pendingPreviewContent").innerHTML = "";
+      // Reset file inputs
+      ["imageInput", "videoInput", "documentInput"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+      });
+    }
+
     // ── SEND MESSAGE ──────────────────────────────────────────────
-    function sendMessage() {
+    async function sendMessage() {
       const messageInput = document.getElementById("messageInput");
       const message = messageInput.value.trim();
-      if (!message) return;
+
+      // Must have text OR a pending attachment
+      if (!message && !pendingAttachment) return;
       if (!currentRoom) { showToast("Please join a room first!", "error"); return; }
 
       // Stop typing indicator
       clearTimeout(typingTimer);
       socket.emit("stop_typing", { roomId: currentRoom });
 
-      socket.emit("send_message", {
+      // ── Case 1: pending file attachment ─────────────────────────
+      if (pendingAttachment && pendingAttachment.type !== "location") {
+        const { type, file } = pendingAttachment;
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+          const response = await fetch("/api/upload", { method: "POST", body: formData });
+          if (!response.ok) throw new Error("Upload failed");
+
+          const result = await response.json();
+          if (result.success) {
+            const msgObj = {
+              roomId: currentRoom,
+              message: message,          // optional caption
+              messageType: type,
+              fileUrl: result.fileUrl,
+              fileName: result.fileName,
+              fileSize: result.fileSize,
+              senderName: myUsername
+            };
+            socket.emit("send_message", msgObj);
+            appendMessage(msgObj, "sender", false, false);
+          } else {
+            showToast("Upload failed!", "error");
+          }
+        } catch (err) {
+          console.error("Upload error:", err);
+          showToast("Failed to upload. Please try again.", "error");
+        }
+
+        cancelPendingAttachment();
+        messageInput.value = "";
+        return;
+      }
+
+      // ── Case 2: pending location attachment ──────────────────────
+      if (pendingAttachment && pendingAttachment.type === "location") {
+        const { lat, lng } = pendingAttachment;
+        const msgObj = {
+          roomId: currentRoom,
+          message: `Location: ${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+          messageType: "location",
+          location: { latitude: lat, longitude: lng, address: "" },
+          senderName: myUsername
+        };
+        socket.emit("send_message", msgObj);
+        appendMessage(msgObj, "sender", false, false);
+        cancelPendingAttachment();
+        messageInput.value = "";
+        return;
+      }
+
+      // ── Case 3: plain text message ───────────────────────────────
+      const msgObj = {
         roomId: currentRoom,
         message: message,
+        messageType: "text",
         senderName: myUsername,
-      });
-
-      // Show own message immediately as sender (with single tick)
-      appendMessage(message, "sender", false, false);
+      };
+      socket.emit("send_message", msgObj);
+      appendMessage(msgObj, "sender", false, false);
       messageInput.value = "";
     }
 
@@ -1096,26 +1266,228 @@
       }
       
       // If the message is sent by the same user on another tab/device, style it as sender (right side)
-      if (data.senderName === myUsername) {
-        appendMessage(data.message, "sender", data.seen, data.delivered);
+      const bubbleType = data.senderName === myUsername ? "sender" : "receiver";
+      appendMessage(data, bubbleType, data.seen, data.delivered);
+    });
+
+    // ── ATTACHMENT FLOWS ──────────────────────────────────────────
+    function toggleAttachmentMenu() {
+      const menu = document.getElementById("attachmentMenu");
+      if (menu.style.display === "flex") {
+        menu.style.display = "none";
       } else {
-        appendMessage((data.senderName ? data.senderName + ": " : "") + data.message, "receiver");
+        menu.style.display = "flex";
+      }
+    }
+
+    // Hide attachment menu when clicking outside
+    document.addEventListener("click", (e) => {
+      const menu = document.getElementById("attachmentMenu");
+      const attachBtn = document.getElementById("attachBtn");
+      if (menu && attachBtn && !menu.contains(e.target) && !attachBtn.contains(e.target)) {
+        menu.style.display = "none";
       }
     });
 
+    function triggerFileInput(type) {
+      toggleAttachmentMenu(); // Hide menu
+      if (type === 'image') document.getElementById('imageInput').click();
+      else if (type === 'video') document.getElementById('videoInput').click();
+      else if (type === 'document') document.getElementById('documentInput').click();
+    }
+
+    // Queue a file for sending (does NOT upload yet)
+    function handleFileSelected(input, type) {
+      const file = input.files[0];
+      if (!file) return;
+
+      const icons = { image: "🖼️", video: "🎥", document: "📄" };
+      const label = file.name + (file.size ? " (" + formatBytes(file.size) + ")" : "");
+
+      pendingAttachment = { type, file };
+      showPendingPreview(label, icons[type] || "📎");
+      document.getElementById("messageInput").focus();
+    }
+
+    // ── GEOLOCATION SHARING ───────────────────────────────────────
+    // Queue a location for sending (does NOT send yet)
+    function queueLocation() {
+      toggleAttachmentMenu(); // Hide menu
+
+      if (!navigator.geolocation) {
+        showToast("Geolocation is not supported by your browser", "error");
+        return;
+      }
+
+      showToast("Fetching your location... 📍", "success");
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          pendingAttachment = { type: "location", lat, lng };
+          showPendingPreview(`${lat.toFixed(5)}, ${lng.toFixed(5)}`, "📍");
+          document.getElementById("messageInput").focus();
+        },
+        (error) => {
+          showToast(`Unable to retrieve location: ${error.message}`, "error");
+        }
+      );
+    }
+
+    // Helper to format file sizes
+    function formatBytes(bytes, decimals = 2) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const dm = decimals < 0 ? 0 : decimals;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+
     // ── APPEND MESSAGE ────────────────────────────────────────────
-    function appendMessage(text, type, seen = false, delivered = false) {
+    function appendMessage(msgInput, bubbleType, seen = false, delivered = false) {
       const chatBody = document.getElementById("chatBody");
       const wrapper = document.createElement("div");
-      wrapper.classList.add("msg-wrapper", type === "sender" ? "sender-wrap" : "receiver-wrap");
+      wrapper.classList.add("msg-wrapper", bubbleType === "sender" ? "sender-wrap" : "receiver-wrap");
 
       const div = document.createElement("div");
-      div.classList.add("message", type);
-      div.innerText = text;
+      div.classList.add("message", bubbleType);
+
+      // If system message
+      if (bubbleType === "system") {
+        div.innerText = typeof msgInput === "string" ? msgInput : msgInput.message;
+        wrapper.appendChild(div);
+        chatBody.appendChild(wrapper);
+        chatBody.scrollTop = chatBody.scrollHeight;
+        return;
+      }
+
+      // Convert raw text strings if needed
+      let msgObj = msgInput;
+      if (typeof msgInput === "string") {
+        msgObj = {
+          message: msgInput,
+          messageType: "text"
+        };
+      }
+
+      const type = msgObj.messageType || "text";
+
+      // Header showing sender name (only for receiver bubbles)
+      if (bubbleType === "receiver" && msgObj.senderName) {
+        const senderSpan = document.createElement("div");
+        senderSpan.style.fontWeight = "bold";
+        senderSpan.style.fontSize = "12px";
+        senderSpan.style.color = "#3b82f6";
+        senderSpan.style.marginBottom = "5px";
+        senderSpan.innerText = msgObj.senderName;
+        div.appendChild(senderSpan);
+      }
+
+      if (type === "text") {
+        const textSpan = document.createElement("span");
+        textSpan.innerText = msgObj.message;
+        div.appendChild(textSpan);
+      } else if (type === "image") {
+        const img = document.createElement("img");
+        img.src = msgObj.fileUrl;
+        img.alt = "Sent image";
+        img.onclick = () => window.open(msgObj.fileUrl, "_blank");
+        div.appendChild(img);
+
+        if (msgObj.message) {
+          const caption = document.createElement("div");
+          caption.style.marginTop = "8px";
+          caption.innerText = msgObj.message;
+          div.appendChild(caption);
+        }
+      } else if (type === "video") {
+        const video = document.createElement("video");
+        video.src = msgObj.fileUrl;
+        video.controls = true;
+        div.appendChild(video);
+
+        if (msgObj.message) {
+          const caption = document.createElement("div");
+          caption.style.marginTop = "8px";
+          caption.innerText = msgObj.message;
+          div.appendChild(caption);
+        }
+      } else if (type === "document") {
+        const docCard = document.createElement("div");
+        docCard.classList.add("doc-card");
+        docCard.onclick = () => window.open(msgObj.fileUrl, "_blank");
+
+        const icon = document.createElement("span");
+        icon.innerText = "📄";
+        icon.style.fontSize = "22px";
+        docCard.appendChild(icon);
+
+        const info = document.createElement("div");
+        info.style.overflow = "hidden";
+
+        const name = document.createElement("div");
+        name.innerText = msgObj.fileName || "Document";
+        name.style.fontWeight = "bold";
+        name.style.whiteSpace = "nowrap";
+        name.style.textOverflow = "ellipsis";
+        name.style.overflow = "hidden";
+        name.style.fontSize = "14px";
+        info.appendChild(name);
+
+        if (msgObj.fileSize) {
+          const size = document.createElement("div");
+          size.innerText = formatBytes(msgObj.fileSize);
+          size.style.fontSize = "11px";
+          size.style.color = "#94a3b8";
+          info.appendChild(size);
+        }
+        docCard.appendChild(info);
+        div.appendChild(docCard);
+      } else if (type === "location") {
+        const locCard = document.createElement("div");
+        locCard.classList.add("location-card");
+
+        const header = document.createElement("div");
+        header.style.display = "flex";
+        header.style.alignItems = "center";
+        header.style.gap = "8px";
+        header.style.fontWeight = "bold";
+        header.style.fontSize = "14px";
+        header.innerText = "📍 Location Shared";
+        locCard.appendChild(header);
+
+        const latLng = document.createElement("div");
+        latLng.style.fontSize = "12px";
+        latLng.style.color = "#cbd5e1";
+        const lat = msgObj.location?.latitude;
+        const lng = msgObj.location?.longitude;
+        latLng.innerText = `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
+        locCard.appendChild(latLng);
+
+        const mapLink = document.createElement("a");
+        mapLink.href = `https://www.google.com/maps?q=${lat},${lng}`;
+        mapLink.target = "_blank";
+        mapLink.innerText = "View on Google Maps";
+        mapLink.style.color = bubbleType === "sender" ? "#60a5fa" : "#3b82f6";
+        mapLink.style.textDecoration = "none";
+        mapLink.style.fontWeight = "bold";
+        mapLink.style.fontSize = "13px";
+        mapLink.style.marginTop = "4px";
+        mapLink.style.display = "inline-block";
+
+        mapLink.onmouseover = () => mapLink.style.textDecoration = "underline";
+        mapLink.onmouseout = () => mapLink.style.textDecoration = "none";
+
+        locCard.appendChild(mapLink);
+        div.appendChild(locCard);
+      }
+
       wrapper.appendChild(div);
 
       // Add seen tick only for own sent messages
-      if (type === "sender") {
+      if (bubbleType === "sender") {
         const tick = document.createElement("span");
         tick.classList.add("seen-tick");
         if (seen) {
