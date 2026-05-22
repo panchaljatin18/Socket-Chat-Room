@@ -46,3 +46,15 @@ server.listen(PORT, "0.0.0.0", () => {
   console.log(`Server Running Locally: http://localhost:${PORT}`);
   console.log(`Server Running On Network: http://${localIp}:${PORT} (Share this IP with others!)`);
 });
+
+// Handle port already in use error gracefully
+server.on("error", (err) => {
+  if (err.code === "EADDRINUSE") {
+    console.error(`\n❌ ERROR: Port ${PORT} is already in use!`);
+    console.error(`   Run this command to fix it:`);
+    console.error(`   netstat -ano | findstr :${PORT}  → then: taskkill /PID <PID> /F\n`);
+    process.exit(1);
+  } else {
+    throw err;
+  }
+});

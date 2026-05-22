@@ -4,6 +4,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import authRoutes from "./routes/authRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
+import messageRoutes from "./routes/messageRoutes.js";
+import callRoutes from "./routes/callRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,9 +18,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// API Routes for Authentication and Uploads
+// API Routes for Authentication, Uploads, and Messages
 app.use("/api", authRoutes);
 app.use("/api", uploadRoutes);
+app.use("/api", messageRoutes);
+app.use("/api", callRoutes);
 
 // Serve static HTML files from Backend/ root
 app.use(express.static(ROOT_DIR));

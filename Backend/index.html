@@ -688,6 +688,10 @@
       0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
       30% { transform: translateY(-6px); opacity: 1; }
     }
+    @keyframes badgePulse {
+      0%, 100% { opacity: 0.4; transform: scale(0.85); }
+      50%       { opacity: 1;   transform: scale(1.15); }
+    }
 
     /* SEEN TICKS */
     .msg-wrapper {
@@ -762,6 +766,501 @@
       background: rgba(15, 23, 42, 0.5);
       border: 1px solid #1f2937;
     }
+
+    /* EMOJI PICKER */
+    #emojiPickerWrapper {
+      position: absolute;
+      bottom: 80px;
+      left: 70px;
+      z-index: 200;
+      display: none;
+      filter: drop-shadow(0 8px 24px rgba(0,0,0,0.6));
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    emoji-picker {
+      --background: #111827;
+      --border-color: #1f2937;
+      --button-active-background: #1e293b;
+      --button-hover-background: #1e293b;
+      --category-font-color: #94a3b8;
+      --input-border-color: #374151;
+      --input-font-color: #f1f5f9;
+      --input-placeholder-color: #64748b;
+      --outline-color: #2563eb;
+      --text-color: #e2e8f0;
+      --indicator-color: #2563eb;
+      height: 380px;
+      width: 340px;
+    }
+    @media (max-width: 480px) {
+      #emojiPickerWrapper { left: 10px; right: 10px; }
+      emoji-picker { width: 100%; }
+    }
+
+    /* ═══════════════════════════════════════
+       VIDEO CALL — WhatsApp Style
+       ═══════════════════════════════════════ */
+
+    /* Full-screen call overlay */
+    #videoCallOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #0a0f1e;
+      z-index: 2000;
+      flex-direction: column;
+    }
+    #videoCallOverlay.active { display: flex; }
+
+    /* Remote video — fills the screen */
+    #remoteVideo {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: #111827;
+    }
+
+    /* No-camera placeholder for remote */
+    #remoteNoCam {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      color: #94a3b8;
+      font-size: 15px;
+      display: none;
+    }
+    #remoteNoCam .big-avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 44px;
+      font-weight: bold;
+      color: white;
+      box-shadow: 0 0 40px rgba(37,99,235,0.4);
+    }
+
+    /* Local (self) video — PiP bottom-right */
+    #localVideoWrapper {
+      position: absolute;
+      bottom: 110px;
+      right: 20px;
+      width: 120px;
+      height: 160px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 2px solid rgba(255,255,255,0.2);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      background: #1e293b;
+      z-index: 10;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    #localVideoWrapper:hover { transform: scale(1.04); }
+    #localVideo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1); /* mirror like WhatsApp */
+    }
+    #localNoCam {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: #1e293b;
+      color: white;
+      font-size: 30px;
+    }
+
+    /* Call info bar (top) */
+    #callInfoBar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 20px 20px 16px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    #callPeerName {
+      font-size: 22px;
+      font-weight: 700;
+      color: white;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+    #callStatusText {
+      font-size: 14px;
+      color: rgba(255,255,255,0.7);
+    }
+    #callTimer {
+      font-size: 13px;
+      color: #10b981;
+      font-variant-numeric: tabular-nums;
+      display: none;
+    }
+
+    /* Bottom controls bar */
+    #callControls {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 20px 20px 36px;
+      background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      align-items: flex-end;
+      z-index: 10;
+    }
+    .call-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: white;
+    }
+    .call-btn-icon {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      transition: transform 0.15s, opacity 0.15s;
+      backdrop-filter: blur(8px);
+    }
+    .call-btn:active .call-btn-icon { transform: scale(0.9); }
+    .call-btn-label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.75);
+    }
+    .btn-mute   .call-btn-icon { background: rgba(255,255,255,0.18); }
+    .btn-cam    .call-btn-icon { background: rgba(255,255,255,0.18); }
+    .btn-end    .call-btn-icon { background: #ef4444; box-shadow: 0 4px 16px rgba(239,68,68,0.5); }
+    .btn-off    .call-btn-icon { background: rgba(100,116,139,0.5) !important; }
+
+    /* INCOMING CALL POPUP */
+    #incomingCallPopup {
+      display: none;
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 340px;
+      max-width: calc(100vw - 32px);
+      background: rgba(15,23,42,0.96);
+      border: 1px solid rgba(37,99,235,0.3);
+      border-radius: 24px;
+      padding: 24px;
+      z-index: 3000;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+      backdrop-filter: blur(20px);
+      animation: slideUpIn 0.35s cubic-bezier(0.175,0.885,0.32,1.275);
+    }
+    #incomingCallPopup.active { display: block; }
+    @keyframes slideUpIn {
+      from { transform: translateX(-50%) translateY(100px); opacity: 0; }
+      to   { transform: translateX(-50%) translateY(0);     opacity: 1; }
+    }
+    .incoming-caller-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      font-weight: bold;
+      color: white;
+      margin: 0 auto 12px;
+      animation: ringPulse 1.2s infinite;
+      box-shadow: 0 0 0 0 rgba(37,99,235,0.5);
+    }
+    @keyframes ringPulse {
+      0%   { box-shadow: 0 0 0 0   rgba(37,99,235,0.5); }
+      70%  { box-shadow: 0 0 0 20px rgba(37,99,235,0);   }
+      100% { box-shadow: 0 0 0 0   rgba(37,99,235,0);   }
+    }
+    .incoming-title {
+      text-align: center;
+      font-size: 13px;
+      color: #94a3b8;
+      margin-bottom: 4px;
+    }
+    .incoming-name {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 20px;
+    }
+    .incoming-actions {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+    }
+    .incoming-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: white;
+    }
+    .incoming-btn-icon {
+      width: 62px;
+      height: 62px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      transition: transform 0.15s;
+    }
+    .incoming-btn:active .incoming-btn-icon { transform: scale(0.9); }
+    .incoming-btn-accept .incoming-btn-icon  { background: #10b981; box-shadow: 0 4px 16px rgba(16,185,129,0.4); }
+    .incoming-btn-decline .incoming-btn-icon { background: #ef4444; box-shadow: 0 4px 16px rgba(239,68,68,0.4); }
+    .incoming-btn-label { font-size: 12px; color: rgba(255,255,255,0.7); }
+
+    /* Call log bubble in chat */
+    .call-log-bubble {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: rgba(37,99,235,0.08);
+      border: 1px solid rgba(37,99,235,0.15);
+      border-radius: 12px;
+      font-size: 13px;
+      color: #94a3b8;
+    }
+    .call-log-bubble .call-icon { font-size: 20px; }
+    .call-log-bubble .call-detail { display: flex; flex-direction: column; gap: 2px; }
+    .call-log-bubble .call-type { font-weight: 600; color: #e2e8f0; font-size: 14px; }
+    .call-log-bubble .call-meta { font-size: 11px; color: #64748b; }
+
+    /* ═══════════════════════════════════════════════════════════
+       RESPONSIVE — VIDEO CALL UI across all screen sizes
+       ═══════════════════════════════════════════════════════════ */
+
+    /* ── Tablet landscape (768px – 1023px) ───────────────────── */
+    @media (min-width: 768px) and (max-width: 1023px) {
+      #videoCallBtn { padding: 7px 12px; font-size: 18px; }
+      #localVideoWrapper { width: 110px; height: 146px; bottom: 100px; right: 16px; }
+      #callControls { padding: 16px 16px 28px; gap: 20px; }
+      .call-btn-icon { width: 54px; height: 54px; font-size: 20px; }
+      #incomingCallPopup { width: 320px; padding: 20px; }
+    }
+
+    /* ── Mobile (max-width: 767px) ───────────────────────────── */
+    @media (max-width: 767px) {
+
+      /* Header — shrink buttons row */
+      .chat-header { flex-wrap: nowrap; overflow: hidden; }
+      #videoCallBtn {
+        padding: 6px 10px;
+        font-size: 16px;
+        border-radius: 8px;
+        flex-shrink: 0;
+      }
+      #terminateBtn { padding: 6px 8px; font-size: 11px; flex-shrink: 0; }
+
+      /* Video call overlay — full screen, portrait-first */
+      #videoCallOverlay { position: fixed; inset: 0; z-index: 2000; }
+
+      /* Remote video fills full screen */
+      #remoteVideo { object-fit: cover; }
+
+      /* Info bar — smaller padding for shorter screens */
+      #callInfoBar {
+        padding: max(14px, env(safe-area-inset-top)) 16px 12px;
+      }
+      #callPeerName { font-size: 18px; }
+      #callStatusText { font-size: 13px; }
+      #callTimer { font-size: 12px; }
+
+      /* PiP local video — smaller on phones */
+      #localVideoWrapper {
+        width: 90px;
+        height: 120px;
+        bottom: max(100px, calc(90px + env(safe-area-inset-bottom)));
+        right: 14px;
+        border-radius: 12px;
+      }
+
+      /* Controls bar — safe area bottom + smaller buttons */
+      #callControls {
+        padding: 16px 20px;
+        padding-bottom: max(24px, env(safe-area-inset-bottom));
+        gap: 18px;
+      }
+      .call-btn-icon {
+        width: 52px;
+        height: 52px;
+        font-size: 20px;
+      }
+      .call-btn-label { font-size: 10px; }
+
+      /* No-camera avatar — smaller */
+      #remoteNoCam .big-avatar { width: 80px; height: 80px; font-size: 36px; }
+      #remoteNoCam { font-size: 13px; }
+
+      /* Incoming call popup — bottom-anchored, full width */
+      #incomingCallPopup {
+        bottom: max(16px, env(safe-area-inset-bottom));
+        width: calc(100vw - 32px);
+        padding: 20px 18px;
+        border-radius: 20px;
+      }
+      .incoming-caller-avatar { width: 60px; height: 60px; font-size: 26px; margin-bottom: 10px; }
+      .incoming-title { font-size: 12px; }
+      .incoming-name { font-size: 18px; margin-bottom: 16px; }
+      .incoming-actions { gap: 28px; }
+      .incoming-btn-icon { width: 56px; height: 56px; font-size: 22px; }
+      .incoming-btn-label { font-size: 11px; }
+
+      /* Call log bubble */
+      .call-log-bubble { padding: 9px 12px; font-size: 12px; }
+      .call-log-bubble .call-icon { font-size: 18px; }
+      .call-log-bubble .call-type { font-size: 13px; }
+    }
+
+    /* ── Small phone (max-width: 480px) ──────────────────────── */
+    @media (max-width: 480px) {
+      #videoCallBtn { padding: 5px 8px; font-size: 15px; }
+
+      #callInfoBar { padding: max(12px, env(safe-area-inset-top)) 12px 10px; }
+      #callPeerName { font-size: 16px; }
+
+      #localVideoWrapper {
+        width: 80px;
+        height: 108px;
+        right: 10px;
+        border-radius: 10px;
+      }
+
+      #callControls {
+        padding: 14px 16px;
+        padding-bottom: max(20px, env(safe-area-inset-bottom));
+        gap: 16px;
+      }
+      .call-btn-icon { width: 50px; height: 50px; font-size: 18px; }
+
+      #incomingCallPopup {
+        bottom: max(12px, env(safe-area-inset-bottom));
+        width: calc(100vw - 24px);
+        padding: 18px 16px;
+        border-radius: 18px;
+      }
+      .incoming-caller-avatar { width: 56px; height: 56px; font-size: 24px; }
+      .incoming-name { font-size: 16px; margin-bottom: 14px; }
+      .incoming-actions { gap: 24px; }
+      .incoming-btn-icon { width: 52px; height: 52px; font-size: 20px; }
+    }
+
+    /* ── Very small phone (max-width: 360px) ─────────────────── */
+    @media (max-width: 360px) {
+      #videoCallBtn { padding: 4px 7px; font-size: 14px; }
+      #terminateBtn { font-size: 10px; padding: 4px 6px; }
+
+      #callPeerName { font-size: 15px; }
+      #callStatusText { font-size: 12px; }
+
+      #localVideoWrapper { width: 72px; height: 96px; right: 8px; }
+
+      #callControls { gap: 12px; }
+      .call-btn-icon { width: 46px; height: 46px; font-size: 17px; }
+      .call-btn-label { font-size: 9px; }
+
+      .incoming-caller-avatar { width: 50px; height: 50px; font-size: 22px; }
+      .incoming-name { font-size: 15px; }
+      .incoming-actions { gap: 20px; }
+      .incoming-btn-icon { width: 48px; height: 48px; font-size: 18px; }
+
+      .call-log-bubble { padding: 8px 10px; }
+      .call-log-bubble .call-type { font-size: 12px; }
+    }
+
+    /* ── Notch / gesture-bar devices (iQOO, Pixel, iPhone) ───── */
+    @media (max-width: 412px) {
+      #callInfoBar {
+        padding-top: max(16px, env(safe-area-inset-top));
+      }
+      #callControls {
+        padding-bottom: max(28px, env(safe-area-inset-bottom));
+      }
+      #localVideoWrapper {
+        bottom: max(104px, calc(96px + env(safe-area-inset-bottom)));
+      }
+      #incomingCallPopup {
+        bottom: max(16px, env(safe-area-inset-bottom));
+      }
+    }
+
+    /* ── Landscape mode on phones ─────────────────────────────── */
+    @media (max-width: 767px) and (orientation: landscape) {
+      #callInfoBar { padding: 8px 16px 6px; }
+      #callPeerName { font-size: 14px; }
+      #callStatusText { font-size: 11px; }
+      #callTimer { font-size: 11px; }
+
+      #localVideoWrapper {
+        width: 72px;
+        height: 96px;
+        bottom: max(68px, calc(60px + env(safe-area-inset-bottom)));
+        right: max(10px, env(safe-area-inset-right));
+      }
+
+      #callControls {
+        padding: 8px 20px;
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
+        gap: 20px;
+      }
+      .call-btn-icon { width: 46px; height: 46px; font-size: 18px; }
+      .call-btn-label { font-size: 9px; }
+
+      #incomingCallPopup {
+        bottom: auto;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: min(320px, calc(100vw - 32px));
+        padding: 16px;
+      }
+      /* reset landscape animation (no translateY) */
+      @keyframes slideUpIn {
+        from { transform: translate(-50%, -50%) scale(0.85); opacity: 0; }
+        to   { transform: translate(-50%, -50%) scale(1);    opacity: 1; }
+      }
+
+      #remoteNoCam .big-avatar { width: 64px; height: 64px; font-size: 28px; }
+      .incoming-caller-avatar { width: 48px; height: 48px; font-size: 20px; margin-bottom: 8px; }
+      .incoming-name { font-size: 15px; margin-bottom: 12px; }
+      .incoming-btn-icon { width: 48px; height: 48px; font-size: 18px; }
+    }
   </style>
 </head>
 
@@ -825,14 +1324,24 @@
         <div>
           <h3 id="chatHeaderTitle">Room Chat</h3>
           <p id="chatHeaderSub">Waiting to join room...</p>
+          <!-- Permission status badge — shown briefly after joining -->
+          <span id="permBadge" style="display:none; align-items:center; gap:5px; font-size:10px; font-weight:600; padding:2px 8px; border-radius:20px; border:1px solid; margin-top:2px; letter-spacing:0.3px;"></span>
         </div>
 
         <!-- TERMINATE CHAT BUTTON (only shown to creator/host) -->
-        <button id="terminateBtn" onclick="terminateRoom()"
-          style="display: none; background: #ef4444; border: none; border-radius: 8px; color: white; padding: 8px 16px; font-weight: bold; cursor: pointer; margin-left: auto; transition: 0.3s;"
-          onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
-          Terminate Chat 🚫
-        </button>
+        <div style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
+          <!-- VIDEO CALL BUTTON -->
+          <button id="videoCallBtn" onclick="startVideoCall()" title="Start Video Call"
+            style="display: none; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); border-radius: 10px; color: #10b981; padding: 8px 14px; font-size: 20px; cursor: pointer; transition: 0.3s; line-height:1;"
+            onmouseover="this.style.background='rgba(16,185,129,0.25)'" onmouseout="this.style.background='rgba(16,185,129,0.15)'">
+            📹
+          </button>
+          <button id="terminateBtn" onclick="terminateRoom()"
+            style="display: none; background: #ef4444; border: none; border-radius: 8px; color: white; padding: 8px 16px; font-weight: bold; cursor: pointer; transition: 0.3s;"
+            onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+            Terminate Chat 🚫
+          </button>
+        </div>
       </div>
 
       <!-- TYPING INDICATOR BAR -->
@@ -879,6 +1388,16 @@
           </button>
         </div>
 
+        <!-- Emoji Picker Panel -->
+        <div id="emojiPickerWrapper">
+          <emoji-picker id="emojiPicker"></emoji-picker>
+        </div>
+
+        <!-- Emoji Button -->
+        <button id="emojiBtn" onclick="toggleEmojiPicker()" title="Emoji" style="width: 50px; height: 50px; border-radius: 12px; background: #1f2937; color: #94a3b8; font-size: 22px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; flex-shrink: 0;">
+          😊
+        </button>
+
         <input type="text" id="messageInput" placeholder="Type message..." />
         <button onclick="sendMessage()">Send</button>
       </div>
@@ -898,10 +1417,65 @@
     </div>
   </div>
 
+  <!-- VIDEO CALL OVERLAY -->
+  <div id="videoCallOverlay">
+    <video id="remoteVideo" autoplay playsinline></video>
+    <div id="remoteNoCam">
+      <div class="big-avatar" id="remoteBigAvatar">?</div>
+      <span id="remoteNoCamName">Connecting...</span>
+    </div>
+
+    <div id="callInfoBar">
+      <div id="callPeerName">Connecting...</div>
+      <div id="callStatusText">Calling...</div>
+      <div id="callTimer">00:00</div>
+    </div>
+
+    <div id="localVideoWrapper">
+      <video id="localVideo" autoplay playsinline muted></video>
+      <div id="localNoCam">🎥</div>
+    </div>
+
+    <div id="callControls">
+      <button class="call-btn btn-mute" id="muteBtn" onclick="toggleMute()">
+        <div class="call-btn-icon">🎙️</div>
+        <span class="call-btn-label" id="muteBtnLabel">Mute</span>
+      </button>
+      <button class="call-btn btn-end" onclick="endCallLocal()">
+        <div class="call-btn-icon">📵</div>
+        <span class="call-btn-label">End</span>
+      </button>
+      <button class="call-btn btn-cam" id="camBtn" onclick="toggleCamera()">
+        <div class="call-btn-icon">📷</div>
+        <span class="call-btn-label" id="camBtnLabel">Camera</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- INCOMING CALL POPUP -->
+  <div id="incomingCallPopup">
+    <div class="incoming-caller-avatar" id="incomingAvatar">?</div>
+    <div class="incoming-title">Incoming Video Call</div>
+    <div class="incoming-name" id="incomingCallerName">Someone</div>
+    <div class="incoming-actions">
+      <button class="incoming-btn incoming-btn-decline" onclick="declineCall()">
+        <div class="incoming-btn-icon">📵</div>
+        <span class="incoming-btn-label">Decline</span>
+      </button>
+      <button class="incoming-btn incoming-btn-accept" onclick="acceptCall()">
+        <div class="incoming-btn-icon">📹</div>
+        <span class="incoming-btn-label">Accept</span>
+      </button>
+    </div>
+  </div>
+
   <!-- TOAST NOTIFICATION CONTAINER -->
   <div class="toast-container" id="toastContainer"></div>
 
 
+
+  <!-- Emoji Picker Web Component (vanilla, no React needed) -->
+  <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
 
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <script>
@@ -925,39 +1499,175 @@
       mySocketId = socket.id;
     });
 
+    // ── WHATSAPP-STYLE MESSAGE PERSISTENCE ───────────────────────
+    // Fetch complete chat history from MongoDB via REST API
+    // Works after: disconnects, logouts, browser refresh, server restart
+    let historyLoaded = false;
+
+    async function fetchMessageHistory(roomId) {
+      const chatBody = document.getElementById("chatBody");
+
+      // Show loading skeleton
+      chatBody.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:12px;padding:10px;">
+          ${[1,2,3].map(i => `
+            <div style="display:flex;align-items:flex-end;gap:8px;${i%2===0?'flex-direction:row-reverse;':''} ">
+              <div style="width:36px;height:36px;border-radius:50%;background:#1f2937;flex-shrink:0;"></div>
+              <div style="height:48px;width:${160+i*30}px;border-radius:12px;background:#1f2937;animation:shimmer 1.4s infinite;"></div>
+            </div>`).join('')}
+        </div>
+        <style>
+          @keyframes shimmer {
+            0%{opacity:0.4}50%{opacity:0.8}100%{opacity:0.4}
+          }
+        </style>
+      `;
+
+      try {
+        const res = await fetch(`/api/messages/${encodeURIComponent(roomId)}`);
+        const data = await res.json();
+
+        chatBody.innerHTML = ""; // Clear skeleton
+        historyLoaded = true;
+
+        if (data.success && data.messages.length > 0) {
+          data.messages.forEach((msg) => {
+            const bubbleType = msg.senderName === myUsername ? "sender" : "receiver";
+            appendMessage(msg, bubbleType, msg.seen, msg.delivered);
+          });
+
+          // Auto-emit seen — user is viewing their history
+          if (document.hasFocus()) {
+            socket.emit("message_seen", { roomId, seenBy: myUsername });
+          }
+        } else {
+          chatBody.innerHTML = `
+            <div style="text-align:center;color:#475569;font-size:13px;margin-top:40px;">
+              <div style="font-size:40px;margin-bottom:10px;">💬</div>
+              No messages yet. Say hello!
+            </div>`;
+        }
+      } catch (err) {
+        console.error("Failed to load message history:", err);
+        chatBody.innerHTML = `
+          <div style="text-align:center;color:#ef4444;font-size:13px;margin-top:40px;">
+            ⚠️ Failed to load chat history. Please refresh.
+          </div>`;
+      }
+    }
+
     // JOIN ROOM
     function joinRoom(savedRoomId) {
       const roomId = typeof savedRoomId === "string" ? savedRoomId : document.getElementById("roomId").value.trim();
       if (!roomId) { return; }
       currentRoom = roomId;
 
-      // Save room ID to session storage to persist on page refresh
+      // Persist room ID in session (for same-tab navigation only, NOT page refresh)
       sessionStorage.setItem("chatRoomId", roomId);
 
-      // Emit object with roomId and username
+      // Clear chat — always start with a blank slate (no old messages shown)
+      // New users and reconnecting users both get a fresh empty chat
+      const chatBody = document.getElementById("chatBody");
+      chatBody.innerHTML = `
+        <div id="chatWelcomePlaceholder" style="text-align:center;color:#475569;font-size:13px;margin-top:40px;">
+          <div style="font-size:40px;margin-bottom:10px;">💬</div>
+          You joined <strong style="color:#3b82f6;">Room: ${roomId}</strong><br>
+          <span style="font-size:12px;margin-top:6px;display:block;">Send a message to start the conversation.</span>
+        </div>`;
+
+      // Join socket room for real-time incoming messages
       socket.emit("join_room", { roomId, username: myUsername });
 
-      // Update header details to reflect joined room ID
+      // Update header
       document.getElementById("chatHeaderTitle").innerText = `Room: ${roomId}`;
       document.getElementById("chatHeaderSub").innerText = "Active Session";
       document.getElementById("chatHeaderAvatar").innerText = roomId.charAt(0).toUpperCase();
 
-      // Hide Room Overlay immediately to show Chat Screen
+      // Hide Room Overlay
       document.getElementById("roomPage").style.display = "none";
+
+      // ── Pre-request camera + mic permission ────────────────────────
+      // This runs silently in the background as soon as the user joins.
+      // If user grants permission once, the browser caches it permanently
+      // so all future video calls start without any permission popup.
+      requestMediaPermissionsEarly();
+    }
+
+    // ── EARLY PERMISSION REQUEST ────────────────────────────────────
+    // Requests camera+mic access immediately on room join.
+    // Tracks are stopped right away — we only need the browser to cache
+    // the granted permission for seamless future video calls.
+    let mediaPermissionGranted = false;
+
+    async function requestMediaPermissionsEarly() {
+      const badge = document.getElementById("permBadge");
+      if (badge) {
+        badge.style.display = "inline-flex";
+        badge.style.background = "rgba(234,179,8,0.15)";
+        badge.style.color = "#eab308";
+        badge.style.borderColor = "rgba(234,179,8,0.3)";
+        badge.innerHTML = `<span style="width:7px;height:7px;border-radius:50%;background:#eab308;animation:badgePulse 1s infinite;"></span> Camera permission...`;
+      }
+
+      try {
+        // Try full camera + mic first
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        stream.getTracks().forEach(t => t.stop()); // stop immediately — we only needed the permission cache
+        mediaPermissionGranted = true;
+
+        if (badge) {
+          badge.style.background = "rgba(16,185,129,0.1)";
+          badge.style.color = "#10b981";
+          badge.style.borderColor = "rgba(16,185,129,0.25)";
+          badge.innerHTML = `<span style="width:7px;height:7px;border-radius:50%;background:#10b981;"></span> Camera & Mic ready`;
+          // Auto-hide after 4 seconds
+          setTimeout(() => { if (badge) badge.style.display = "none"; }, 4000);
+        }
+        console.log("Media permissions pre-granted ✅");
+
+      } catch (camErr) {
+        // Camera denied — try audio only
+        try {
+          const audioStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+          audioStream.getTracks().forEach(t => t.stop());
+          mediaPermissionGranted = true;
+
+          if (badge) {
+            badge.style.background = "rgba(234,179,8,0.1)";
+            badge.style.color = "#eab308";
+            badge.style.borderColor = "rgba(234,179,8,0.25)";
+            badge.innerHTML = `<span style="width:7px;height:7px;border-radius:50%;background:#eab308;"></span> Mic only (no camera)`;
+            setTimeout(() => { if (badge) badge.style.display = "none"; }, 5000);
+          }
+          console.log("Mic permission pre-granted (no camera) ⚠️");
+
+        } catch (audioErr) {
+          // Both denied
+          mediaPermissionGranted = false;
+          if (badge) {
+            badge.style.background = "rgba(239,68,68,0.1)";
+            badge.style.color = "#ef4444";
+            badge.style.borderColor = "rgba(239,68,68,0.25)";
+            badge.innerHTML = `<span style="width:7px;height:7px;border-radius:50%;background:#ef4444;"></span> Permission denied`;
+            setTimeout(() => { if (badge) badge.style.display = "none"; }, 6000);
+          }
+          console.warn("Camera & mic permissions denied ❌");
+        }
+      }
     }
 
     let isAutojoin = false;
 
-    // Auto-rejoin room if page is refreshed
-    const savedRoom = sessionStorage.getItem("chatRoomId");
-    if (savedRoom) {
-      isAutojoin = true;
-      joinRoom(savedRoom);
-    }
+    // Auto-rejoin is intentionally DISABLED:
+    // Users should NOT see old messages on page refresh.
+    // They must manually re-enter the Room ID to join fresh.
+    // (chatRoomId is still stored so future features can use it, but we don't auto-join)
+    sessionStorage.removeItem("chatRoomId"); // clear any stale room on page load
 
     // ROOM PRIVILEGE STATUS (Host/Participant)
     socket.on("room_status", (data) => {
       const terminateBtn = document.getElementById("terminateBtn");
+      const videoCallBtn = document.getElementById("videoCallBtn");
       if (data.isCreator) {
         terminateBtn.style.display = "block";
         if (!isAutojoin) {
@@ -969,7 +1679,9 @@
           showToast("Successfully joined the room! 👋", "success");
         }
       }
-      isAutojoin = false; // Reset after first auto-join
+      // Show video call button for everyone in a room
+      if (videoCallBtn) videoCallBtn.style.display = "block";
+      isAutojoin = false;
     });
 
     // JOIN ERROR CALLBACK (e.g. trying to join a different room in another tab)
@@ -999,37 +1711,40 @@
       appendMessage(data.message, "system");
     });
 
-    // LOAD PREVIOUS MESSAGES (Chat History)
-    socket.on("previous_messages", (messages) => {
-      // Clear current chat display to avoid duplicates
+    // previous_messages socket event — no longer used.
+    // History is now loaded via REST API (WhatsApp-style persistence).
+    // Kept as no-op to avoid any errors if server still emits it.
+    socket.on("previous_messages", () => {});
+
+    // ROOM TERMINATED BY HOST CALLBACK
+    // All connected users are kicked back to the room-join overlay
+    // Username is preserved — only the room session is cleared
+    socket.on("room_terminated", (data) => {
+      showToast(data.message + " Room closed. 🚫", "error");
+
+      // End any active call
+      if (typeof cleanupCall === "function") cleanupCall();
+
+      // Clear only the room from session (keep username)
+      sessionStorage.removeItem("chatRoomId");
+      currentRoom = "";
+
+      // Reset chat body
       document.getElementById("chatBody").innerHTML = "";
 
-      messages.forEach((msg) => {
-        if (msg.senderId === "system" || msg.senderName === "System") {
-          appendMessage(msg.message, "system");
-        } else {
-          const bubbleType = msg.senderName === myUsername ? "sender" : "receiver";
-          appendMessage(msg, bubbleType, msg.seen, msg.delivered);
-        }
-      });
+      // Reset header
+      document.getElementById("chatHeaderTitle").innerText = "Room Chat";
+      document.getElementById("chatHeaderSub").innerText = "Waiting to join room...";
+      document.getElementById("chatHeaderAvatar").innerText = "R";
+      document.getElementById("terminateBtn").style.display = "none";
+      document.getElementById("videoCallBtn").style.display = "none";
 
-      // Auto-emit seen if the user has loaded room history (meaning they see the messages now) and window is focused
-      if (currentRoom && document.hasFocus()) {
-        socket.emit("message_seen", { roomId: currentRoom, seenBy: myUsername });
-      }
-    });
+      // Reset typing bar
+      document.getElementById("typingBar").style.display = "none";
 
-    // ROOM TERMINATED BY HOST CALLBACK — Logout session and redirect
-    socket.on("room_terminated", (data) => {
-      showToast(`${data.message} Logging you out... 🚪`, "error");
-
-      // Clear active user session
-      sessionStorage.clear();
-
-      // Redirect to Login Screen after 1.5s delay
-      setTimeout(() => {
-        window.location.href = "/login";
-      }, 1500);
+      // Show room join overlay again (user can join a new room)
+      document.getElementById("roomPage").style.display = "flex";
+      document.getElementById("roomId").value = "";
     });
 
     // TERMINATE ROOM
@@ -1506,6 +2221,43 @@
       chatBody.scrollTop = chatBody.scrollHeight;
     }
 
+    // ── EMOJI PICKER ──────────────────────────────────────────────
+    function toggleEmojiPicker() {
+      const wrapper = document.getElementById('emojiPickerWrapper');
+      const isOpen = wrapper.style.display === 'block';
+      // Close attachment menu if open
+      document.getElementById('attachmentMenu').style.display = 'none';
+      wrapper.style.display = isOpen ? 'none' : 'block';
+    }
+
+    // When an emoji is selected → append to message input
+    document.addEventListener('DOMContentLoaded', () => {
+      const picker = document.getElementById('emojiPicker');
+      if (picker) {
+        picker.addEventListener('emoji-click', (e) => {
+          const input = document.getElementById('messageInput');
+          const emoji = e.detail.unicode;
+          // Insert emoji at cursor position
+          const start = input.selectionStart;
+          const end = input.selectionEnd;
+          input.value = input.value.substring(0, start) + emoji + input.value.substring(end);
+          input.selectionStart = input.selectionEnd = start + emoji.length;
+          input.focus();
+        });
+      }
+    });
+
+    // Close emoji picker when clicking outside
+    document.addEventListener('click', (e) => {
+      const wrapper = document.getElementById('emojiPickerWrapper');
+      const emojiBtn = document.getElementById('emojiBtn');
+      if (wrapper && emojiBtn &&
+          !wrapper.contains(e.target) &&
+          !emojiBtn.contains(e.target)) {
+        wrapper.style.display = 'none';
+      }
+    });
+
     // PREMIUM DYNAMIC TOAST SYSTEM
     function showToast(message, type = "success") {
       const container = document.getElementById("toastContainer");
@@ -1531,6 +2283,276 @@
           toast.remove();
         }, 400);
       }, 3500);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    //  VIDEO CALL — WhatsApp-Style WebRTC Implementation
+    // ═══════════════════════════════════════════════════════════════
+    const ICE_SERVERS = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun1.l.google.com:19302" }] };
+
+    let peerConnection     = null;
+    let localStream        = null;
+    let activeCallId       = null;
+    let remotePeerSocketId = null;
+    let callTimerInterval  = null;
+    let callStartTime      = null;
+    let isMuted            = false;
+    let isCamOff           = false;
+    let missedCallTimeout  = null;
+    let pendingOffer       = null;
+
+    function genCallId() { return "call-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8); }
+    function fmtDuration(sec) { return String(Math.floor(sec/60)).padStart(2,"0") + ":" + String(sec%60).padStart(2,"0"); }
+
+    function startCallTimer() {
+      callStartTime = Date.now();
+      const el = document.getElementById("callTimer");
+      el.style.display = "block";
+      callTimerInterval = setInterval(() => {
+        el.innerText = fmtDuration(Math.floor((Date.now() - callStartTime) / 1000));
+      }, 1000);
+    }
+    function stopCallTimer() {
+      clearInterval(callTimerInterval); callTimerInterval = null;
+      return callStartTime ? Math.floor((Date.now() - callStartTime) / 1000) : 0;
+    }
+
+    function showCallOverlay(peerName, statusText) {
+      document.getElementById("callPeerName").innerText    = peerName;
+      document.getElementById("callStatusText").innerText  = statusText;
+      document.getElementById("callTimer").style.display   = "none";
+      document.getElementById("callTimer").innerText       = "00:00";
+      document.getElementById("remoteBigAvatar").innerText = peerName.charAt(0).toUpperCase();
+      document.getElementById("remoteNoCamName").innerText = peerName;
+      document.getElementById("videoCallOverlay").classList.add("active");
+    }
+    function hideCallOverlay() {
+      document.getElementById("videoCallOverlay").classList.remove("active");
+      document.getElementById("remoteVideo").srcObject = null;
+      document.getElementById("remoteNoCam").style.display = "none";
+      document.getElementById("callTimer").style.display   = "none";
+    }
+
+    function appendCallLog(peerName, status, durationSec) {
+      const chatBody = document.getElementById("chatBody");
+      const wrapper  = document.createElement("div");
+      wrapper.classList.add("msg-wrapper");
+      wrapper.style.cssText = "align-self:center; width:100%; display:flex; justify-content:center;";
+      let icon, label, meta;
+      if (status === "answered") { icon="📹"; label="Video Call"; meta=durationSec>0?`Duration: ${fmtDuration(durationSec)}`:"Connected"; }
+      else if (status === "declined") { icon="📵"; label="Call Declined"; meta=`${peerName} declined`; }
+      else { icon="📵"; label="Missed Video Call"; meta=`${peerName} called`; }
+      wrapper.innerHTML = `<div class="call-log-bubble"><span class="call-icon">${icon}</span><div class="call-detail"><span class="call-type">${label}</span><span class="call-meta">${meta}</span></div></div>`;
+      chatBody.appendChild(wrapper);
+      chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    async function getLocalMedia() {
+      try { return await navigator.mediaDevices.getUserMedia({ video: true, audio: true }); }
+      catch(e) {
+        try { showToast("Camera denied — audio only 🎙️","error"); return await navigator.mediaDevices.getUserMedia({ video: false, audio: true }); }
+        catch(e2) { showToast("Microphone access denied ❌","error"); return null; }
+      }
+    }
+    function attachLocalStream(stream) {
+      localStream = stream;
+      const lv = document.getElementById("localVideo");
+      const ln = document.getElementById("localNoCam");
+      if (stream.getVideoTracks().length > 0) { lv.srcObject = stream; ln.style.display = "none"; }
+      else { lv.srcObject = null; ln.style.display = "flex"; }
+    }
+
+    function createPeerConnection(targetSocketId) {
+      const pc = new RTCPeerConnection(ICE_SERVERS);
+      remotePeerSocketId = targetSocketId;
+      pc.onicecandidate = (e) => {
+        if (e.candidate) socket.emit("ice_candidate", { roomId: currentRoom, candidate: e.candidate, targetSocketId: remotePeerSocketId });
+      };
+      pc.ontrack = (e) => {
+        const rv = document.getElementById("remoteVideo");
+        const rn = document.getElementById("remoteNoCam");
+        if (e.streams && e.streams[0]) {
+          rv.srcObject = e.streams[0];
+          rn.style.display = e.streams[0].getVideoTracks().length > 0 ? "none" : "flex";
+        }
+        if (!callTimerInterval) { document.getElementById("callStatusText").innerText = "Connected"; startCallTimer(); }
+      };
+      pc.onconnectionstatechange = () => {
+        if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
+          showToast("Connection lost. Call ended.","error"); endCallLocal();
+        }
+      };
+      return pc;
+    }
+
+    // ── CALLER: start call ──────────────────────────────────────────
+    async function startVideoCall() {
+      if (!currentRoom) { showToast("Join a room first!","error"); return; }
+      if (peerConnection)  { showToast("Already in a call!","error"); return; }
+      activeCallId = genCallId();
+      const stream = await getLocalMedia();
+      if (!stream) return;
+      attachLocalStream(stream);
+      peerConnection = createPeerConnection(null);
+      stream.getTracks().forEach(t => peerConnection.addTrack(t, stream));
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+      showCallOverlay("Calling room...", "Waiting for answer...");
+      socket.emit("video_call_initiate", { roomId: currentRoom, callerName: myUsername, callId: activeCallId, offer: peerConnection.localDescription });
+
+      // Caller timeout: if no answer in 2 minutes, cancel the call
+      // This also notifies the callee to dismiss their popup
+      missedCallTimeout = setTimeout(() => {
+        if (peerConnection && peerConnection.connectionState !== "connected") {
+          showToast("No answer — call ended.","error");
+          // Emit cancellation so callee's popup closes
+          socket.emit("video_call_end", { callId: activeCallId, roomId: currentRoom, endedByName: myUsername, targetSocketId: null });
+          appendCallLog("No answer", "missed", 0);
+          cleanupCall();
+        }
+      }, 120000); // 2 minutes — caller waits longer
+    }
+
+    // ── CALLEE: incoming call event ─────────────────────────────────
+    // Popup stays open INDEFINITELY until the user manually accepts or declines.
+    // It only closes when:
+    //   1. User clicks Accept
+    //   2. User clicks Decline
+    //   3. Caller cancels the call (video_call_ended socket event)
+    socket.on("video_call_incoming", ({ callId, callerName, callerSocketId, offer }) => {
+      if (peerConnection) {
+        // Already in a call — auto-decline
+        socket.emit("video_call_decline", { callId, roomId: currentRoom, declinerName: myUsername, callerSocketId });
+        return;
+      }
+      activeCallId = callId; remotePeerSocketId = callerSocketId; pendingOffer = { offer, callerSocketId };
+      document.getElementById("incomingCallerName").innerText = callerName;
+      document.getElementById("incomingAvatar").innerText = callerName.charAt(0).toUpperCase();
+      document.getElementById("incomingCallPopup").classList.add("active");
+      // NO auto-dismiss timeout — popup stays until user explicitly acts
+    });
+
+    async function acceptCall() {
+      clearTimeout(missedCallTimeout);
+      document.getElementById("incomingCallPopup").classList.remove("active");
+      if (!pendingOffer) return;
+      const { offer, callerSocketId } = pendingOffer; pendingOffer = null;
+      const callerName = document.getElementById("incomingCallerName").innerText;
+      const stream = await getLocalMedia();
+      if (!stream) return;
+      attachLocalStream(stream);
+      peerConnection = createPeerConnection(callerSocketId);
+      stream.getTracks().forEach(t => peerConnection.addTrack(t, stream));
+      await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+      const answer = await peerConnection.createAnswer();
+      await peerConnection.setLocalDescription(answer);
+      showCallOverlay(callerName, "Connecting...");
+      socket.emit("video_call_answer", { callId: activeCallId, roomId: currentRoom, answererName: myUsername, callerSocketId, answer: peerConnection.localDescription });
+    }
+
+    function declineCall() {
+      clearTimeout(missedCallTimeout);
+      document.getElementById("incomingCallPopup").classList.remove("active");
+      const callerName = document.getElementById("incomingCallerName").innerText;
+      if (activeCallId && remotePeerSocketId) {
+        socket.emit("video_call_decline", { callId: activeCallId, roomId: currentRoom, declinerName: myUsername, callerSocketId: remotePeerSocketId });
+        appendCallLog(callerName, "declined", 0);
+      }
+      activeCallId = null; pendingOffer = null; remotePeerSocketId = null;
+    }
+
+    // ── Caller receives answer ──────────────────────────────────────
+    socket.on("video_call_answered", async ({ callId, answererName, answererSocketId, answer }) => {
+      clearTimeout(missedCallTimeout);
+      if (!peerConnection) return;
+      remotePeerSocketId = answererSocketId;
+      document.getElementById("callPeerName").innerText   = answererName;
+      document.getElementById("callStatusText").innerText = "Connecting...";
+      await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+    });
+
+    socket.on("video_call_busy", ({ callId, answeredBy }) => {
+      if (activeCallId === callId) {
+        clearTimeout(missedCallTimeout);
+        document.getElementById("incomingCallPopup").classList.remove("active");
+        showToast(`${answeredBy} answered the call.`,"success");
+        activeCallId = null; pendingOffer = null; remotePeerSocketId = null;
+      }
+    });
+
+    socket.on("video_call_declined", ({ callId, declinerName }) => {
+      if (activeCallId !== callId) return;
+      showToast(`${declinerName} declined the call.`,"error");
+      appendCallLog(declinerName, "declined", 0);
+      cleanupCall();
+    });
+
+    socket.on("ice_candidate", async ({ candidate }) => {
+      if (!peerConnection || !candidate) return;
+      try { await peerConnection.addIceCandidate(new RTCIceCandidate(candidate)); } catch(e) {}
+    });
+
+    socket.on("video_call_ended", ({ callId, endedByName }) => {
+      if (activeCallId !== callId) return;
+
+      const popup = document.getElementById("incomingCallPopup");
+      const popupStillOpen = popup && popup.classList.contains("active");
+
+      if (popupStillOpen) {
+        // Caller cancelled the call while callee was still ringing
+        popup.classList.remove("active");
+        showToast(`${endedByName} cancelled the call. 📵`, "error");
+        appendCallLog(endedByName, "missed", 0);
+        activeCallId = null; pendingOffer = null; remotePeerSocketId = null;
+      } else {
+        // Normal in-call hang-up from the other side
+        showToast(`${endedByName} ended the call.`, "error");
+        const elapsed = stopCallTimer();
+        appendCallLog(endedByName, "answered", elapsed);
+        cleanupCall();
+      }
+    });
+
+    function endCallLocal() {
+      const elapsed  = stopCallTimer();
+      const peerName = document.getElementById("callPeerName").innerText;
+      const wasAnswered = callStartTime !== null;
+      if (activeCallId) {
+        socket.emit("video_call_end", { callId: activeCallId, roomId: currentRoom, endedByName: myUsername, targetSocketId: remotePeerSocketId });
+        appendCallLog(peerName, wasAnswered ? "answered" : "missed", elapsed);
+      }
+      cleanupCall();
+    }
+
+    function cleanupCall() {
+      clearTimeout(missedCallTimeout); stopCallTimer();
+      if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+      if (peerConnection) { peerConnection.close(); peerConnection = null; }
+      document.getElementById("localVideo").srcObject = null;
+      document.getElementById("localNoCam").style.display = "none";
+      hideCallOverlay();
+      document.getElementById("incomingCallPopup").classList.remove("active");
+      activeCallId = null; remotePeerSocketId = null; callStartTime = null; pendingOffer = null;
+      isMuted = false; isCamOff = false;
+      const mb = document.getElementById("muteBtn"); const cb = document.getElementById("camBtn");
+      if (mb) { mb.classList.remove("btn-off"); document.getElementById("muteBtnLabel").innerText = "Mute"; }
+      if (cb) { cb.classList.remove("btn-off");  document.getElementById("camBtnLabel").innerText  = "Camera"; }
+    }
+
+    function toggleMute() {
+      if (!localStream) return;
+      isMuted = !isMuted;
+      localStream.getAudioTracks().forEach(t => { t.enabled = !isMuted; });
+      const btn = document.getElementById("muteBtn"); const label = document.getElementById("muteBtnLabel");
+      isMuted ? (btn.classList.add("btn-off"), label.innerText="Unmute") : (btn.classList.remove("btn-off"), label.innerText="Mute");
+    }
+    function toggleCamera() {
+      if (!localStream) return;
+      isCamOff = !isCamOff;
+      localStream.getVideoTracks().forEach(t => { t.enabled = !isCamOff; });
+      const btn = document.getElementById("camBtn"); const label = document.getElementById("camBtnLabel");
+      const ln  = document.getElementById("localNoCam");
+      isCamOff ? (btn.classList.add("btn-off"), label.innerText="Turn On", ln.style.display="flex") : (btn.classList.remove("btn-off"), label.innerText="Camera", ln.style.display="none");
     }
   </script>
 </body>
